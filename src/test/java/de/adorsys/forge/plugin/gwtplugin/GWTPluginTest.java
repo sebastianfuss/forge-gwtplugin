@@ -23,15 +23,20 @@ public class GWTPluginTest extends AbstractShellTest {
 
 	@Test
 	public void testSetup() throws Exception {
-		// Create a new barebones Java project
 		Project p = initializeProject(PackagingType.WAR);
 
-		// Queue input lines to be read as the Shell executes.
 		queueInputLines("y");
 
-		// Execute a command. If any input is required, it will be read from
-		// queued input.
 		getShell().execute("gwt setup");
-		Assert.assertNotNull(null);
+	}
+	
+	@Test
+	public void testCreateMVP() throws Exception {
+		Project p = initializeProject(PackagingType.WAR);
+
+		queueInputLines("y");
+
+		getShell().execute("gwt setup");
+		getShell().execute("gwt create-mvp --name foobar");
 	}
 }

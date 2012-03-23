@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,6 @@ import javax.inject.Inject;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.model.PluginExecution;
-import org.apache.maven.model.Resource;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
@@ -28,8 +26,6 @@ import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jboss.forge.maven.MavenCoreFacet;
 import org.jboss.forge.parser.JavaParser;
-import org.jboss.forge.parser.java.JavaClass;
-import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.parser.java.JavaType;
 import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
@@ -38,6 +34,7 @@ import org.jboss.forge.project.facets.BaseFacet;
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
+import org.jboss.forge.project.facets.WebResourceFacet;
 import org.jboss.forge.resources.FileResource;
 import org.jboss.forge.shell.events.PickupResource;
 import org.jboss.forge.shell.plugins.Alias;
@@ -47,9 +44,9 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
  * @author sandro sonntag
  * 
  */
-@Alias("gwtFacet")
+@Alias("gwtfacet")
 @RequiresFacet({ MavenCoreFacet.class, JavaSourceFacet.class,
-		DependencyFacet.class })
+		DependencyFacet.class, WebResourceFacet.class })
 public class GWTFacet extends BaseFacet {
 	
 	static {
@@ -71,15 +68,15 @@ public class GWTFacet extends BaseFacet {
 	public GWTFacet(DependencyInstaller installer) {
 		super();
 		this.installer = installer;
-		
 	}
 	
 	@Override
 	public boolean install() {
 		installGwtConfiguration();
 		installDependencies();
-		createMessages();
-		createModule();
+		createGWTMessages();
+		createGWTModule();
+		createWebResources();
 		createJavaSource("EntryPoint.java.ftl");
 		createJavaSource("EventBus.java.ftl");
 		createJavaSource("GinClientModule.java.ftl");
@@ -91,6 +88,27 @@ public class GWTFacet extends BaseFacet {
 	}
 	
 	
+	private void createWebResources() {
+		final WebResourceFacet webResource = project.getFacet(WebResourceFacet.class);
+		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
+		final JavaSourceFacet javaFacet = project.getFacet(JavaSourceFacet.class);
+		
+		StringWriter writer = new StringWriter();
+		VelocityContext context = new VelocityContext();
+		
+		Velocity.mergeTemplate("web.xml.ftl", "UTF-8", context, writer);
+		FileResource<?> webXml = webResource.createWebResource(writer.toString(), "WEB-INF/web.xml");
+		pickup.fire(new PickupResource(webXml));
+		
+		context = new VelocityContext();
+		context.put("basePackage", javaFacet.getBasePackage());
+		context.put("description", mvnFacet.getPOM().getName());
+		writer = new StringWriter();
+		Velocity.mergeTemplate("index.html.ftl", "UTF-8", context, writer);
+		FileResource<?> indexHtml = webResource.createWebResource(writer.toString(), "index.html");
+		pickup.fire(new PickupResource(indexHtml));
+	}
+
 	public void createMVP(String name) {
 		HashMap<String, Object> contextData = new HashMap<String, Object>();
 		String nameClassPrefix = upperFirstChar(name);
@@ -239,7 +257,7 @@ public class GWTFacet extends BaseFacet {
 		return dependencysInstalled;
 	}
 	
-	private void createMessages() {
+	private void createGWTMessages() {
 		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
 		ResourceFacet resources = project.getFacet(ResourceFacet.class);
 		String name = java.getBasePackage();
@@ -267,7 +285,7 @@ public class GWTFacet extends BaseFacet {
 		pickup.fire(new PickupResource(messagesResource));
 	}
 	
-	private void createModule() {
+	private void createGWTModule() {
 		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
 		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
 		ResourceFacet resources = project.getFacet(ResourceFacet.class);
@@ -306,7 +324,6 @@ public class GWTFacet extends BaseFacet {
 				stringWriter.toString());
 		try {
 			java.saveJavaSource(serviceClass);
-
 			pickup.fire(new PickupResource(java.getJavaResource(serviceClass)));
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);

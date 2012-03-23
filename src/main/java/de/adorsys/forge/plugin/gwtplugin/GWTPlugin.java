@@ -67,9 +67,12 @@ public class GWTPlugin implements Plugin {
 
 	@Command(value = "create-mvp", help = "creates a mvp package")
 	public void createMVP(
-			@Option(name = "package", required = true, type = PromptType.JAVA_PACKAGE) JavaResource entity,
+			@Option(name = "name", required = true, type = PromptType.JAVA_VARIABLE_NAME)
+			String name,
 			final PipeOut out) throws FileNotFoundException {
-
+		
+		GWTFacet facet = project.getFacet(GWTFacet.class);
+		facet.createMVP(name);
 	}
 
 	@Command(value = "add-bus-event", help = "creates a mvp package")
