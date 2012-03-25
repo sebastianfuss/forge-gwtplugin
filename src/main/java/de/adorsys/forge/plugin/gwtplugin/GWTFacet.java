@@ -17,6 +17,7 @@ import java.util.Properties;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.PluginExecution;
 import org.apache.velocity.VelocityContext;
@@ -26,6 +27,7 @@ import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jboss.forge.maven.MavenCoreFacet;
 import org.jboss.forge.parser.JavaParser;
+import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.parser.java.JavaType;
 import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
@@ -36,6 +38,7 @@ import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.project.facets.WebResourceFacet;
 import org.jboss.forge.resources.FileResource;
+import org.jboss.forge.resources.java.JavaResource;
 import org.jboss.forge.shell.events.PickupResource;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
@@ -77,14 +80,20 @@ public class GWTFacet extends BaseFacet {
 		createGWTMessages();
 		createGWTModule();
 		createWebResources();
+		return true;
+	}
+	
+	public void createBeanValidation() {
+		createJavaSource("ValidationMessageResolver.java.ftl");
+		createJavaSource("ValidatorFactory.java.ftl");
+	}
+	
+	public void createMVP4G() {
 		createJavaSource("EntryPoint.java.ftl");
 		createJavaSource("EventBus.java.ftl");
 		createJavaSource("GinClientModule.java.ftl");
-		createJavaSource("ValidationMessageResolver.java.ftl");
-		createJavaSource("ValidatorFactory.java.ftl");
 		createJavaSource("ReverseCompositeView.java.ftl");
 		createMVP("application");
-		return true;
 	}
 	
 	
@@ -111,7 +120,7 @@ public class GWTFacet extends BaseFacet {
 
 	public void createMVP(String name) {
 		HashMap<String, Object> contextData = new HashMap<String, Object>();
-		String nameClassPrefix = upperFirstChar(name);
+		String nameClassPrefix = StringUtils.capitalize(name);
 		name = name.toLowerCase();
 		contextData.put("nameClassPrefix", nameClassPrefix);
 		contextData.put("name", name);
@@ -333,12 +342,14 @@ public class GWTFacet extends BaseFacet {
 
 	private String getClassPrefix(final MavenCoreFacet mvnFacet) {
 		String artifactId = mvnFacet.getPOM().getArtifactId();
-		return upperFirstChar(artifactId);
+		return StringUtils.capitalize(artifactId);
 	}
 
-	private String upperFirstChar(String name) {
-		String classPrefix = String.valueOf(Character.toUpperCase(name.charAt(0))) + name.substring(1);
-		return classPrefix;
+	public JavaResource getEventBus() throws FileNotFoundException {
+		final JavaSourceFacet javaFacet = project.getFacet(JavaSourceFacet.class);
+		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
+		String classPrefix = getClassPrefix(mvnFacet);
+		return javaFacet.getJavaResource(javaFacet.getBasePackage() + "." + classPrefix + "EventBus");
 	}
 
 }

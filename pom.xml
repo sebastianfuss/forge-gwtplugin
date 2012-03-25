@@ -6,6 +6,12 @@
 	<groupId>de.adorsys.forge.plugins.gwtplugin</groupId>
 	<artifactId>gwtplugin</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
+	
+	<licenses>
+		<license>
+			<name>ASL2</name>
+		</license>
+	</licenses>
 	<properties>
 		<forge.api.version>1.0.1.Final</forge.api.version>
 	</properties>
@@ -69,6 +75,11 @@
 			<artifactId>velocity</artifactId>
 			<version>1.7</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.0.1</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
@@ -90,4 +101,8 @@
 			</plugin>
 		</plugins>
 	</build>
+	<organization>
+		<name>Adorsys GmbH Co KG</name>
+		<url>http://www.adorsys.de</url>
+	</organization>
 </project>
