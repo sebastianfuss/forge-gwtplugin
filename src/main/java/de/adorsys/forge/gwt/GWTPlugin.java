@@ -1,15 +1,11 @@
-package de.adorsys.forge.plugin.gwtplugin;
+package de.adorsys.forge.gwt;
 
 import java.io.FileNotFoundException;
-import java.io.StringWriter;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
-import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.parser.java.JavaSource;
@@ -59,8 +55,8 @@ public class GWTPlugin implements Plugin {
 	@SetupCommand
 	@Command(value = "setup", help = "Setup a gwt project")
 	public void setup(
-			@Option(name = "beanValidation", flagOnly = true) boolean validation,
-			@Option(name = "mvp4g", flagOnly = true) boolean mvp4g,
+			@Option(name = "no-bean-validation", flagOnly = true) boolean validation,
+			@Option(name = "no-mvp4g", flagOnly = true) boolean mvp4g,
 			PipeOut out) {
 		if (!project.hasFacet(GWTFacet.class))
 	           event.fire(new InstallFacets(GWTFacet.class));
@@ -69,30 +65,41 @@ public class GWTPlugin implements Plugin {
 
 		GWTFacet facet = project.getFacet(GWTFacet.class);
 		
-		if(validation) {
-			facet.createBeanValidation();
+		if(!validation) {
+			facet.setupBeanValidation();
 		}
 		
-		if(mvp4g) {
-			facet.createMVP4G();
+		if(!mvp4g) {
+			facet.setupMVP4G();
 		}
+	}
+	
+	@Command(value = "setup-beanvalidation", help = "add beanvalidation to the gwt project")
+	public void addBeanValidation() {
+		GWTFacet facet = project.getFacet(GWTFacet.class);
+		facet.setupBeanValidation();
+	}
+	
+	@Command(value = "setup-mvp4g", help = "add mvp4g to the gwt project")
+	public void addMvp4g() {
+		GWTFacet facet = project.getFacet(GWTFacet.class);
+		facet.setupMVP4G();
 	}
 
 	@Command(value = "create-mvp", help = "creates a mvp package")
 	public void createMVP(
-			@Option(name = "name", required = true, type = PromptType.JAVA_VARIABLE_NAME)
+			@Option(required = true, type = PromptType.JAVA_VARIABLE_NAME, help="the mvp artifactname that builds the created package")
 			String name,
 			final PipeOut out) throws FileNotFoundException {
 		
 		GWTFacet facet = project.getFacet(GWTFacet.class);
-		facet.createMVP(name);
+		JavaResource presenter = facet.createMVP(name);
+		pickup.fire(new PickupResource(presenter));
 	}
-
+	
 	@Command(value = "add-event", help = "creates a mvp package")
 	public void addBusEvent(
-			@Option(name = "presenter", required = true, type = PromptType.JAVA_CLASS) JavaResource presenter,
-			@Option(name = "name", required = true, type = PromptType.JAVA_VARIABLE_NAME)
-			String name,
+			@Option(required = true, type = PromptType.JAVA_VARIABLE_NAME, help="name of the event") String name,
 			final PipeOut out) throws FileNotFoundException  {
 		
 		GWTFacet facet = project.getFacet(GWTFacet.class);
@@ -108,7 +115,7 @@ public class GWTPlugin implements Plugin {
 		
 		JavaClass presenterJavaSource;
 		try {
-			JavaSource<?> ps = presenter.getJavaSource();
+			JavaSource<?> ps = resource.getJavaSource();
 			if (!ps.isClass()) {
 				ShellMessages.error(out, "Presenter is not a class!");
 				return;
@@ -120,15 +127,13 @@ public class GWTPlugin implements Plugin {
 		}
 		
 		Method<JavaInterface> eventMethod = eventBus.addMethod("void " + name + "();");
-		eventMethod.addAnnotation("com.mvp4g.client.annotation.Event").setLiteralValue("handlers", "{" + presenterJavaSource.getQualifiedName() + "}");
-		presenterJavaSource.addMethod("public void on" + StringUtils.capitalize(name) + "();");
+		eventMethod.addAnnotation("com.mvp4g.client.annotation.Event").setLiteralValue("handlers", "{" + presenterJavaSource.getQualifiedName() + ".class}");
+		presenterJavaSource.addMethod("public void on" + StringUtils.capitalize(name) + "() {\n};");
 		
 		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
 		java.saveJavaSource(eventBus);
 		java.saveJavaSource(presenterJavaSource);
 		
-		pickup.fire(new PickupResource(eventBusResource));
-		pickup.fire(new PickupResource(presenter));
 	}
 
 }

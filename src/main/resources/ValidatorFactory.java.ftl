@@ -8,10 +8,11 @@ import com.google.gwt.validation.client.AbstractGwtValidatorFactory;
 import com.google.gwt.validation.client.GwtValidation;
 import com.google.gwt.validation.client.impl.AbstractGwtValidator;
 
+import ${basePackage}.model.${classPrefix}Model;
 
 public final class ${classPrefix}ValidatorFactory extends AbstractGwtValidatorFactory {
 
-	@GwtValidation(value = { }, groups = { Default.class })
+	@GwtValidation(value = { ${classPrefix}Model.class }, groups = { Default.class })
 	public interface GwtValidator extends Validator {
 	}
 

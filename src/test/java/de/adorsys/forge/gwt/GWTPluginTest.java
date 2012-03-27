@@ -1,4 +1,4 @@
-package de.adorsys.forge.plugin.gwtplugin;
+package de.adorsys.forge.gwt;
 
 import javax.inject.Inject;
 
@@ -10,6 +10,8 @@ import org.jboss.forge.test.AbstractShellTest;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.Assert;
 import org.junit.Test;
+
+import de.adorsys.forge.gwt.GWTPlugin;
 
 public class GWTPluginTest extends AbstractShellTest {
 	@Inject
@@ -32,14 +34,14 @@ public class GWTPluginTest extends AbstractShellTest {
 	public void testSetupValidation() throws Exception {
 		Project p = initializeProject(PackagingType.WAR);
 		queueInputLines("y");
-		getShell().execute("gwt setup --beanValidation");
+		getShell().execute("gwt setup --no-mvp4g");
 	}
 	
 	@Test
 	public void testSetupMvp4g() throws Exception {
 		Project p = initializeProject(PackagingType.WAR);
 		queueInputLines("y");
-		getShell().execute("gwt setup --mvp4g");
+		getShell().execute("gwt setup --no-bean-validation");
 	}
 
 	
@@ -49,8 +51,8 @@ public class GWTPluginTest extends AbstractShellTest {
 
 		queueInputLines("y");
 
-		getShell().execute("gwt setup --mvp4g");
-		getShell().execute("gwt create-mvp --name foobar");
+		getShell().execute("gwt setup");
+		getShell().execute("gwt create-mvp foobar");
 	}
 	
 	
@@ -60,8 +62,8 @@ public class GWTPluginTest extends AbstractShellTest {
 
 		queueInputLines("y");
 
-		getShell().execute("gwt setup --mvp4g");
-		getShell().execute("gwt create-mvp --name foobar");
-		getShell().execute("gwt add-event --name goToFoobar --presenter com.test.foobar.FoobarPresenterImpl");
+		getShell().execute("gwt setup");
+		getShell().execute("gwt create-mvp foobar");
+		getShell().execute("gwt add-event goToFoobar --presenter com.test.foobar.FoobarPresenterImpl");
 	}
 }

@@ -15,7 +15,7 @@ public class ${nameClassPrefix}ViewImpl extends ReverseCompositeView<${nameClass
 
     private static RootViewUiBinder uiBinder = GWT.create( RootViewUiBinder.class );
 
-    interface RootViewUiBinder extends UiBinder<Widget, ApplicationViewImpl> {
+    interface RootViewUiBinder extends UiBinder<Widget, ${nameClassPrefix}ViewImpl> {
     }
 
     public ${nameClassPrefix}ViewImpl() {

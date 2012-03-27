@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.adorsys.forge.plugin.gwtplugin;
+package de.adorsys.forge.gwt;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +26,6 @@ import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jboss.forge.maven.MavenCoreFacet;
 import org.jboss.forge.parser.JavaParser;
-import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.parser.java.JavaType;
 import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
@@ -39,7 +37,6 @@ import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.project.facets.WebResourceFacet;
 import org.jboss.forge.resources.FileResource;
 import org.jboss.forge.resources.java.JavaResource;
-import org.jboss.forge.shell.events.PickupResource;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
 
@@ -63,9 +60,6 @@ public class GWTFacet extends BaseFacet {
 	}
 
 	private final DependencyInstaller installer;
-	
-	@Inject
-	private Event<PickupResource> pickup;
 
 	@Inject
 	public GWTFacet(DependencyInstaller installer) {
@@ -83,12 +77,13 @@ public class GWTFacet extends BaseFacet {
 		return true;
 	}
 	
-	public void createBeanValidation() {
+	public void setupBeanValidation() {
 		createJavaSource("ValidationMessageResolver.java.ftl");
 		createJavaSource("ValidatorFactory.java.ftl");
+		createJavaSource("SampleModelClass.java.ftl");
 	}
 	
-	public void createMVP4G() {
+	public void setupMVP4G() {
 		createJavaSource("EntryPoint.java.ftl");
 		createJavaSource("EventBus.java.ftl");
 		createJavaSource("GinClientModule.java.ftl");
@@ -106,29 +101,28 @@ public class GWTFacet extends BaseFacet {
 		VelocityContext context = new VelocityContext();
 		
 		Velocity.mergeTemplate("web.xml.ftl", "UTF-8", context, writer);
-		FileResource<?> webXml = webResource.createWebResource(writer.toString(), "WEB-INF/web.xml");
-		pickup.fire(new PickupResource(webXml));
-		
+		webResource.createWebResource(writer.toString(), "WEB-INF/web.xml");
+
 		context = new VelocityContext();
 		context.put("basePackage", javaFacet.getBasePackage());
 		context.put("description", mvnFacet.getPOM().getName());
 		writer = new StringWriter();
 		Velocity.mergeTemplate("index.html.ftl", "UTF-8", context, writer);
-		FileResource<?> indexHtml = webResource.createWebResource(writer.toString(), "index.html");
-		pickup.fire(new PickupResource(indexHtml));
+		webResource.createWebResource(writer.toString(), "index.html");
 	}
 
-	public void createMVP(String name) {
+	public JavaResource createMVP(String name) {
 		HashMap<String, Object> contextData = new HashMap<String, Object>();
 		String nameClassPrefix = StringUtils.capitalize(name);
 		name = name.toLowerCase();
 		contextData.put("nameClassPrefix", nameClassPrefix);
 		contextData.put("name", name);
 		
-		createJavaSource("mvp/PresenterImpl.java.ftl", contextData);
+		JavaResource presenter = createJavaSource("mvp/PresenterImpl.java.ftl", contextData);
 		createJavaSource("mvp/View.java.ftl", contextData);
 		createJavaSource("mvp/ViewImpl.java.ftl", contextData);
 		createViewXML(name, nameClassPrefix);
+		return presenter;
 	}
 
 	private void installGwtConfiguration() {
@@ -200,13 +194,13 @@ public class GWTFacet extends BaseFacet {
 	private void installDependencies() {
 		DependencyFacet facet = project.getFacet(DependencyFacet.class);
 		for (Dependency requirement : getRequiredDependencies()) {
-			if (!installer.isInstalled(project, requirement)) {
-				if (!facet.hasDirectManagedDependency(requirement)) {
+//			if (!installer.isInstalled(project, requirement)) {
+//				if (!facet.hasDirectManagedDependency(requirement)) {
 					facet.addDirectManagedDependency(requirement);
-				}
-				installer.install(project, requirement,
-						requirement.getScopeTypeEnum());
-			}
+//				}
+				System.out.println(requirement);
+				installer.install(project, requirement,	requirement.getScopeTypeEnum());
+//			}
 		}
 	}
 
@@ -214,7 +208,7 @@ public class GWTFacet extends BaseFacet {
 		Dependency gwtUser = DependencyBuilder
 				.create("com.google.gwt:gwt-user:2.4.0:compile:jar");
 		Dependency slf4jGwt = DependencyBuilder
-				.create("org.jvnet.hudson.main:hudson-gwt-slf4j:2.1.1:runtime:jar");
+				.create("org.jvnet.hudson.main:hudson-gwt-slf4j:2.1.1:compile:jar");
 		Dependency slf4j = DependencyBuilder
 				.create("org.slf4j:slf4j-api:1.6.1:compile:jar");
 		Dependency jaxRs = DependencyBuilder
@@ -228,7 +222,7 @@ public class GWTFacet extends BaseFacet {
 		mvp4g.getExcludedDependencies().add(DependencyBuilder.create("gwt-servlet:com.google.gwt"));
 
 		Dependency hibernateValidatorSources = DependencyBuilder
-				.create("org.hibernate:hibernate-validator:4.2.0.Final:compile:jar:sources");
+				.create("org.hibernate:hibernate-validator:4.2.0.Final:compile:jar").setClassifier("sources");
 
 		Dependency hibernateValidator = DependencyBuilder
 				.create("org.hibernate:hibernate-validator:4.2.0.Final:compile:jar");
@@ -274,10 +268,8 @@ public class GWTFacet extends BaseFacet {
 		VelocityContext velocityContext = new VelocityContext();
 		StringWriter stringWriter = new StringWriter();
 		Velocity.mergeTemplate("Messages.ftl", "UTF-8", velocityContext, stringWriter);
+		resources.createResource(stringWriter.toString().toCharArray(), name.replace('.', '/') + "/Messages.properties");
 		
-		FileResource<?> MessagesResource = resources.createResource(stringWriter.toString().toCharArray(), name.replace('.', '/') + "/Messages.properties");
-		
-		pickup.fire(new PickupResource(MessagesResource));
 	}
 	
 	private void createViewXML(String name, String classPrefix) {
@@ -289,9 +281,7 @@ public class GWTFacet extends BaseFacet {
 		
 		StringWriter stringWriter = new StringWriter();
 		Velocity.mergeTemplate("mvp/ViewImpl.ui.xml.ftl", "UTF-8", velocityContext, stringWriter);
-		
-		FileResource<?> messagesResource = resources.createResource(stringWriter.toString().toCharArray(), java.getBasePackage().replace('.', '/') + String.format("/%s/%sViewImpl.ui.xml", name, classPrefix));
-		pickup.fire(new PickupResource(messagesResource));
+		resources.createResource(stringWriter.toString().toCharArray(), java.getBasePackage().replace('.', '/') + String.format("/%s/%sViewImpl.ui.xml", name, classPrefix));
 	}
 	
 	private void createGWTModule() {
@@ -307,16 +297,14 @@ public class GWTFacet extends BaseFacet {
 		
 		StringWriter stringWriter = new StringWriter();
 		Velocity.mergeTemplate("Module.gwt.xml.ftl", "UTF-8", velocityContext, stringWriter);
-		
-		FileResource<?> messagesResource = resources.createResource(stringWriter.toString().toCharArray(),  name.replace('.', '/')  + String.format("/%s.gwt.xml", classPrefix));
-		pickup.fire(new PickupResource(messagesResource));
+		resources.createResource(stringWriter.toString().toCharArray(),  name.replace('.', '/')  + String.format("/%s.gwt.xml", classPrefix));
 	}
 	
 	private void createJavaSource(String template) {
 		createJavaSource(template, new HashMap<String, Object>());
 	}
 	
-	private void createJavaSource(String template, Map<String, Object> parameter) {
+	private JavaResource createJavaSource(String template, Map<String, Object> parameter) {
 		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
 		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
 		VelocityContext velocityContext = new VelocityContext(parameter);
@@ -332,8 +320,8 @@ public class GWTFacet extends BaseFacet {
 		JavaType<?> serviceClass = JavaParser.parse(JavaType.class,
 				stringWriter.toString());
 		try {
-			java.saveJavaSource(serviceClass);
-			pickup.fire(new PickupResource(java.getJavaResource(serviceClass)));
+			JavaResource saveJavaSource = java.saveJavaSource(serviceClass);
+			return saveJavaSource;
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
