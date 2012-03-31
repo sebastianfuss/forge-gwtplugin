@@ -14,8 +14,9 @@ How to install:
 * `cd forge-gwtplugin`
 * run 'forge'
 * install the gwt plugin
-	[forge-gwt] gwtplugin $ forge source-plugin 
- 	? [project directory (of type org.jboss.forge.resources.Resource)]: .
+
+	`[forge-gwt] gwtplugin $ forge source-plugin 
+ 	? [project directory (of type org.jboss.forge.resources.Resource)]: .`
 
 How to start:
 =============
@@ -23,7 +24,6 @@ How to start:
 * Create your project
 
 	[no project] adorsys $ new-project --named gwtmvp --topLevelPackage de.adorsys.gwtmvp --type war
-	
 	 ? Use [/Users/sso/Documents/dev/adorsys/gwtmvp] as project directory? [Y/n] Y
 	***SUCCESS*** Created project [gwtmvp] in new working directory [/Users/sso/Documents/dev/adorsys/gwtmvp]
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp
@@ -39,7 +39,6 @@ How to start:
 * Setup GWT base configuration
 
 	[gwtmvp] gwtmvp $ gwt setup
-	
 	com.google.gwt:gwt-user:jar::2.4.0
 	org.slf4j:slf4j-api:jar::1.6.1
 	org.jvnet.hudson.main:hudson-gwt-slf4j:jar::2.1.1
@@ -95,9 +94,9 @@ Add your event (myEvent) to the EventBus Interface
 	
 * Test your new app
 
-	gwt run
+	* gwt run
 	
-	gwt debug
+	* gwt debug
 	
 
 /Happy coding
