@@ -100,7 +100,21 @@
 			<id>JBOSS_NEXUS</id>
 			<url>http://repository.jboss.org/nexus/content/groups/public</url>
 		</repository>
+
 	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>mc-release</id>
+			<name>Local Maven repository of releases</name>
+			<url>http://mc-repo.googlecode.com/svn/maven2/releases</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
 	<build>
 		<finalName>gwtplugin</finalName>
 		<plugins>
@@ -111,6 +125,13 @@
 					<source>1.6</source>
 					<target>1.6</target>
 					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.mycila.maven-license-plugin</groupId>
+				<artifactId>maven-license-plugin</artifactId>
+				<configuration>
+					<header>src/etc/header.txt</header>
 				</configuration>
 			</plugin>
 		</plugins>

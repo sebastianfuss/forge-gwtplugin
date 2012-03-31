@@ -13,13 +13,10 @@ import org.jboss.forge.maven.MavenCoreFacet;
 import org.jboss.forge.parser.java.Annotation;
 import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.parser.java.JavaInterface;
-import org.jboss.forge.parser.java.JavaSource;
 import org.jboss.forge.parser.java.Method;
-import org.jboss.forge.parser.java.Visibility;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.events.InstallFacets;
-import org.jboss.forge.resources.java.JavaMethodResource;
 import org.jboss.forge.resources.java.JavaResource;
 import org.jboss.forge.shell.PromptType;
 import org.jboss.forge.shell.Shell;
@@ -33,11 +30,11 @@ import org.jboss.forge.shell.plugins.Option;
 import org.jboss.forge.shell.plugins.PipeOut;
 import org.jboss.forge.shell.plugins.Plugin;
 import org.jboss.forge.shell.plugins.RequiresFacet;
-import org.jboss.forge.shell.plugins.RequiresResource;
 import org.jboss.forge.shell.plugins.SetupCommand;
 
 /**
- * @author sandro sonntag
+ * This Plugin supports common gwt commands.
+ * @author Sandro Sonntag
  */
 @Alias("gwt")
 @RequiresFacet(GWTFacet.class)
@@ -130,27 +127,39 @@ public class GWTPlugin implements Plugin {
 				if(literalValue == null) {
 					continue;
 				}
-				JavaResource presenterResource = javafacet.getJavaResource(literalValue.replace(".", "/").replaceAll("class", "java"));
-				if(!presenterResource.exists()){
-					continue;
-				}
 				
-				JavaClass presenterSource = (JavaClass) presenterResource.getJavaSource();
-				
-				List<Annotation<JavaInterface>> annotations = eventMethod.getAnnotations();
-				for (Annotation<JavaInterface> a : annotations) {
-					eventMethod.removeAnnotation(a);
-				}
-				
-				String eventName = "on" + StringUtils.capitalize(eventMethod.getName());
-				eventMethod.setName(eventName);
-				String method = eventMethod.toString().replace(';', ' ');
-				String signature = eventMethod.toSignature().replaceFirst(eventMethod.getName(), eventName);
-				if (!presenterSource.hasMethodSignature(eventMethod)){
-					presenterSource.addMethod(method + "{\n}");
-					ShellMessages.info(out, String.format(" - %s : created event method %s", presenterSource.getName(), signature));
-					javafacet.saveJavaSource(presenterSource);
-				}
+				addEventMethod(out, javafacet,
+						eventMethod, literalValue);
+			}
+		}
+	}
+
+	private void addEventMethod(final PipeOut out,
+			JavaSourceFacet javafacet, Method<JavaInterface> eventMethod,
+			String literalValue) throws FileNotFoundException {
+		String[] presenter = literalValue.replace("{", "").replace("}", "").replaceAll(".class", "").split(",");
+		for (String presenterName : presenter) {
+			JavaResource presenterResource = javafacet.getJavaResource(presenterName);
+			if(!presenterResource.exists()){
+				ShellMessages.error(out, String.format("Presenter not found: %s ", presenterName));
+				continue;
+			}
+			
+			JavaClass presenterSource = (JavaClass) presenterResource.getJavaSource();
+			
+			List<Annotation<JavaInterface>> annotations = eventMethod.getAnnotations();
+			for (Annotation<JavaInterface> a : annotations) {
+				eventMethod.removeAnnotation(a);
+			}
+			
+			String eventName = "on" + StringUtils.capitalize(eventMethod.getName());
+			eventMethod.setName(eventName);
+			String method = eventMethod.toString().replace(';', ' ');
+			String signature = eventMethod.toSignature().replaceFirst(eventMethod.getName(), eventName);
+			if (!presenterSource.hasMethodSignature(eventMethod)){
+				presenterSource.addMethod(method + "{\n}");
+				ShellMessages.info(out, String.format(" - %s : created event method %s", presenterSource.getName(), signature));
+				javafacet.saveJavaSource(presenterSource);
 			}
 		}
 	}

@@ -80,7 +80,7 @@ public class GWTPluginTest extends AbstractShellTest {
 		JavaInterface eventBus = (JavaInterface) eventBusResource.getJavaSource();
 		
 		Method<JavaInterface> addMethod = eventBus.addMethod("void myEventMethod(String param)");
-		addMethod.addAnnotation("com.mvp4g.client.annotation.Event").setLiteralValue("handlers", "com.test.foobar.FoobarPresenterImpl");
+		addMethod.addAnnotation("com.mvp4g.client.annotation.Event").setLiteralValue("handlers", "com.test.foobar.FoobarPresenterImpl.class");
 		javaFacet.saveJavaSource(eventBus);
 		getShell().execute("gwt wire-events");
 		getShell().execute("gwt wire-events");

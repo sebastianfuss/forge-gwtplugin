@@ -35,14 +35,13 @@ import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.project.facets.WebResourceFacet;
-import org.jboss.forge.resources.FileResource;
 import org.jboss.forge.resources.java.JavaResource;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
 
 /**
+ * This is the GWT project facet. 
  * @author sandro sonntag
- * 
  */
 @Alias("gwtfacet")
 @RequiresFacet({ MavenCoreFacet.class, JavaSourceFacet.class,
