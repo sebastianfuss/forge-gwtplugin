@@ -1,4 +1,19 @@
 /**
+ * Copyright (C) 2012 Sandro Sonntag sso@adorsys.de
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/**
  * 
  */
 package de.adorsys.forge.gwt;
@@ -77,16 +92,16 @@ public class GWTFacet extends BaseFacet {
 	}
 	
 	public void setupBeanValidation() {
-		createJavaSource("ValidationMessageResolver.java.ftl");
-		createJavaSource("ValidatorFactory.java.ftl");
-		createJavaSource("SampleModelClass.java.ftl");
+		createJavaSource("ValidationMessageResolver.java.vm");
+		createJavaSource("ValidatorFactory.java.vm");
+		createJavaSource("SampleModelClass.java.vm");
 	}
 	
 	public void setupMVP4G() {
-		createJavaSource("EntryPoint.java.ftl");
-		createJavaSource("EventBus.java.ftl");
-		createJavaSource("GinClientModule.java.ftl");
-		createJavaSource("ReverseCompositeView.java.ftl");
+		createJavaSource("EntryPoint.java.vm");
+		createJavaSource("EventBus.java.vm");
+		createJavaSource("GinClientModule.java.vm");
+		createJavaSource("ReverseCompositeView.java.vm");
 		createMVP("application");
 	}
 	
@@ -99,14 +114,14 @@ public class GWTFacet extends BaseFacet {
 		StringWriter writer = new StringWriter();
 		VelocityContext context = new VelocityContext();
 		
-		Velocity.mergeTemplate("web.xml.ftl", "UTF-8", context, writer);
+		Velocity.mergeTemplate("web.xml.vm", "UTF-8", context, writer);
 		webResource.createWebResource(writer.toString(), "WEB-INF/web.xml");
 
 		context = new VelocityContext();
 		context.put("basePackage", javaFacet.getBasePackage());
 		context.put("description", mvnFacet.getPOM().getName());
 		writer = new StringWriter();
-		Velocity.mergeTemplate("index.html.ftl", "UTF-8", context, writer);
+		Velocity.mergeTemplate("index.html.vm", "UTF-8", context, writer);
 		webResource.createWebResource(writer.toString(), "index.html");
 	}
 
@@ -117,9 +132,9 @@ public class GWTFacet extends BaseFacet {
 		contextData.put("nameClassPrefix", nameClassPrefix);
 		contextData.put("name", name);
 		
-		JavaResource presenter = createJavaSource("mvp/PresenterImpl.java.ftl", contextData);
-		createJavaSource("mvp/View.java.ftl", contextData);
-		createJavaSource("mvp/ViewImpl.java.ftl", contextData);
+		JavaResource presenter = createJavaSource("mvp/PresenterImpl.java.vm", contextData);
+		createJavaSource("mvp/View.java.vm", contextData);
+		createJavaSource("mvp/ViewImpl.java.vm", contextData);
 		createViewXML(name, nameClassPrefix);
 		return presenter;
 	}
@@ -266,7 +281,7 @@ public class GWTFacet extends BaseFacet {
 		
 		VelocityContext velocityContext = new VelocityContext();
 		StringWriter stringWriter = new StringWriter();
-		Velocity.mergeTemplate("Messages.ftl", "UTF-8", velocityContext, stringWriter);
+		Velocity.mergeTemplate("Messages.vm", "UTF-8", velocityContext, stringWriter);
 		resources.createResource(stringWriter.toString().toCharArray(), name.replace('.', '/') + "/Messages.properties");
 		
 	}
@@ -279,7 +294,7 @@ public class GWTFacet extends BaseFacet {
 		velocityContext.put("basePackage", java.getBasePackage());
 		
 		StringWriter stringWriter = new StringWriter();
-		Velocity.mergeTemplate("mvp/ViewImpl.ui.xml.ftl", "UTF-8", velocityContext, stringWriter);
+		Velocity.mergeTemplate("mvp/ViewImpl.ui.xml.vm", "UTF-8", velocityContext, stringWriter);
 		resources.createResource(stringWriter.toString().toCharArray(), java.getBasePackage().replace('.', '/') + String.format("/%s/%sViewImpl.ui.xml", name, classPrefix));
 	}
 	
@@ -295,7 +310,7 @@ public class GWTFacet extends BaseFacet {
 		velocityContext.put("basePackage", java.getBasePackage());
 		
 		StringWriter stringWriter = new StringWriter();
-		Velocity.mergeTemplate("Module.gwt.xml.ftl", "UTF-8", velocityContext, stringWriter);
+		Velocity.mergeTemplate("Module.gwt.xml.vm", "UTF-8", velocityContext, stringWriter);
 		resources.createResource(stringWriter.toString().toCharArray(),  name.replace('.', '/')  + String.format("/%s.gwt.xml", classPrefix));
 	}
 	
