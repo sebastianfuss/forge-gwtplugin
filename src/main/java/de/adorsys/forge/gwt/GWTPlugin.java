@@ -1,18 +1,25 @@
 package de.adorsys.forge.gwt;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jboss.forge.maven.MavenCoreFacet;
+import org.jboss.forge.parser.java.Annotation;
 import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.parser.java.JavaSource;
 import org.jboss.forge.parser.java.Method;
+import org.jboss.forge.parser.java.Visibility;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.events.InstallFacets;
+import org.jboss.forge.resources.java.JavaMethodResource;
 import org.jboss.forge.resources.java.JavaResource;
 import org.jboss.forge.shell.PromptType;
 import org.jboss.forge.shell.Shell;
@@ -26,6 +33,7 @@ import org.jboss.forge.shell.plugins.Option;
 import org.jboss.forge.shell.plugins.PipeOut;
 import org.jboss.forge.shell.plugins.Plugin;
 import org.jboss.forge.shell.plugins.RequiresFacet;
+import org.jboss.forge.shell.plugins.RequiresResource;
 import org.jboss.forge.shell.plugins.SetupCommand;
 
 /**
@@ -86,7 +94,7 @@ public class GWTPlugin implements Plugin {
 		facet.setupMVP4G();
 	}
 
-	@Command(value = "create-mvp", help = "creates a mvp package")
+	@Command(value = "new-mvp", help = "creates a mvp package")
 	public void createMVP(
 			@Option(required = true, type = PromptType.JAVA_VARIABLE_NAME, help="the mvp artifactname that builds the created package")
 			String name,
@@ -97,10 +105,11 @@ public class GWTPlugin implements Plugin {
 		pickup.fire(new PickupResource(presenter));
 	}
 	
-	@Command(value = "add-event", help = "creates a mvp package")
-	public void addBusEvent(
-			@Option(required = true, type = PromptType.JAVA_VARIABLE_NAME, help="name of the event") String name,
+	@Command(value = "wire-events", help = "inspect the eventbus for new event methods")
+	public void wireEvents(
 			final PipeOut out) throws FileNotFoundException  {
+		
+		JavaSourceFacet javafacet = project.getFacet(JavaSourceFacet.class);
 		
 		GWTFacet facet = project.getFacet(GWTFacet.class);
 		JavaResource eventBusResource;
@@ -113,27 +122,68 @@ public class GWTPlugin implements Plugin {
 			return;
 		}
 		
-		JavaClass presenterJavaSource;
-		try {
-			JavaSource<?> ps = resource.getJavaSource();
-			if (!ps.isClass()) {
-				ShellMessages.error(out, "Presenter is not a class!");
-				return;
+		List<Method<JavaInterface>> methods = eventBus.getMethods();
+		for (Method<JavaInterface> eventMethod : methods) {
+			Annotation<JavaInterface> annotation = eventMethod.getAnnotation("com.mvp4g.client.annotation.Event");
+			if (annotation != null) {
+				String literalValue = annotation.getLiteralValue("handlers");
+				if(literalValue == null) {
+					continue;
+				}
+				JavaResource presenterResource = javafacet.getJavaResource(literalValue.replace(".", "/").replaceAll("class", "java"));
+				if(!presenterResource.exists()){
+					continue;
+				}
+				
+				JavaClass presenterSource = (JavaClass) presenterResource.getJavaSource();
+				
+				List<Annotation<JavaInterface>> annotations = eventMethod.getAnnotations();
+				for (Annotation<JavaInterface> a : annotations) {
+					eventMethod.removeAnnotation(a);
+				}
+				
+				String eventName = "on" + StringUtils.capitalize(eventMethod.getName());
+				eventMethod.setName(eventName);
+				String method = eventMethod.toString().replace(';', ' ');
+				String signature = eventMethod.toSignature().replaceFirst(eventMethod.getName(), eventName);
+				if (!presenterSource.hasMethodSignature(eventMethod)){
+					presenterSource.addMethod(method + "{\n}");
+					ShellMessages.info(out, String.format(" - %s : created event method %s", presenterSource.getName(), signature));
+					javafacet.saveJavaSource(presenterSource);
+				}
 			}
-			presenterJavaSource = (JavaClass) ps;
-		} catch (FileNotFoundException e) {
-			ShellMessages.error(out, "Presenter source not found!");
-			return;
 		}
-		
-		Method<JavaInterface> eventMethod = eventBus.addMethod("void " + name + "();");
-		eventMethod.addAnnotation("com.mvp4g.client.annotation.Event").setLiteralValue("handlers", "{" + presenterJavaSource.getQualifiedName() + ".class}");
-		presenterJavaSource.addMethod("public void on" + StringUtils.capitalize(name) + "() {\n};");
-		
-		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
-		java.saveJavaSource(eventBus);
-		java.saveJavaSource(presenterJavaSource);
-		
+	}
+	
+	@Command("run")
+	public void run(final PipeOut out, String... a){
+		String command = "gwt:run";
+		final ArrayList<String> args = new ArrayList<String>();
+		executeCommand(out, command, args, a);
+	}
+	
+	@Command("debug")
+	public void debug(final PipeOut out, String... a){
+		String command = "gwt:debug";
+		final ArrayList<String> args = new ArrayList<String>();
+		executeCommand(out, command, args, a);
+	}
+
+	private void executeCommand(final PipeOut out, String command,
+			final ArrayList<String> args, String... a) {
+		args.add(command);
+		if (a != null) {
+			args.addAll(Arrays.asList(a));
+		}
+		final MavenCoreFacet facet = project.getFacet(MavenCoreFacet.class);
+		Thread gwtRunThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				facet.executeMaven(out, args.toArray(new String[0]));
+			}
+		});
+		gwtRunThread.start();
 	}
 
 }
