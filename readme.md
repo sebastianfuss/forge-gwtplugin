@@ -18,13 +18,14 @@ How to install:
 	`[forge-gwt] gwtplugin $ forge source-plugin 
  	? [project directory (of type org.jboss.forge.resources.Resource)]: .`
 
-How to start:
+Getting started:
 =============
 
-* Create your project
+**Create your project**
 
 	[no project] adorsys $ new-project --named gwtmvp --topLevelPackage de.adorsys.gwtmvp --type war
-	 ? Use [/Users/sso/Documents/dev/adorsys/gwtmvp] as project directory? [Y/n] Y
+	
+	? Use [/Users/sso/Documents/dev/adorsys/gwtmvp] as project directory? [Y/n] Y
 	***SUCCESS*** Created project [gwtmvp] in new working directory [/Users/sso/Documents/dev/adorsys/gwtmvp]
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/pom.xml
@@ -35,10 +36,12 @@ How to start:
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/test/resources
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/java/de/adorsys/gwtmvp
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/resources/META-INF/forge.xml
-	
-* Setup GWT base configuration
+
+
+**Setup GWT base configuration**
 
 	[gwtmvp] gwtmvp $ gwt setup
+	
 	com.google.gwt:gwt-user:jar::2.4.0
 	org.slf4j:slf4j-api:jar::1.6.1
 	org.jvnet.hudson.main:hudson-gwt-slf4j:jar::2.1.1
@@ -65,7 +68,7 @@ How to start:
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/java/de/adorsys/gwtmvp/application/ApplicationViewImpl.java
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/resources/de/adorsys/gwtmvp/application/ApplicationViewImpl.ui.xml
 	
-* Create a MVP dialog
+**Create a MVP dialog**
 	
 	[gwtmvp] MenuePresenterImpl.java $ gwt new-mvp menu
 
@@ -75,7 +78,7 @@ How to start:
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/java/de/adorsys/gwtmvp/menu/MenuViewImpl.java
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/resources/de/adorsys/gwtmvp/menu/MenuViewImpl.ui.xml
 
-* Wire a event between eventbus and presenter
+**Wire a event between eventbus and presenter**
 
 Add your event (myEvent) to the EventBus Interface
 
@@ -92,11 +95,11 @@ Add your event (myEvent) to the EventBus Interface
 	
 	gwt wire-events 
 	
-* Test your new app
+**Test your new app**
 
-	* gwt run
+	* ``gwt run``
 	
-	* gwt debug
+	* ``gwt debug``
 	
 
 /Happy coding
