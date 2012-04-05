@@ -69,7 +69,7 @@ public class GWTPluginTest extends AbstractShellTest {
 		queueInputLines("y");
 
 		getShell().execute("gwt setup");
-		getShell().execute("gwt create-mvp foobar");
+		getShell().execute("gwt new-mvp foobar");
 	}
 	
 	

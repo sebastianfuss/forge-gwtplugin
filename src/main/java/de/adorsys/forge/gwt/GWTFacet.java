@@ -27,15 +27,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.PluginExecution;
+import org.apache.maven.model.Repository;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -63,22 +65,21 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 		DependencyFacet.class, WebResourceFacet.class })
 public class GWTFacet extends BaseFacet {
 	
-	static {
-		Properties properties = new Properties();
-		properties.setProperty("resource.loader", "class");
-		properties
-				.setProperty("class.resource.loader.class",
-						"org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-
-		Velocity.init(properties);
-	}
-
+	private VelocityEngine velocityEngine;
+	
 	private final DependencyInstaller installer;
 
 	@Inject
 	public GWTFacet(DependencyInstaller installer) {
 		super();
 		this.installer = installer;
+		velocityEngine = new VelocityEngine();
+		velocityEngine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
+		velocityEngine.setProperty("classpath.resource.loader.class", 
+		    ClasspathResourceLoader.class.getName());
+		velocityEngine.setProperty( RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS,
+			      "org.apache.velocity.runtime.log.JdkLogChute" );
+		
 	}
 	
 	@Override
@@ -114,14 +115,14 @@ public class GWTFacet extends BaseFacet {
 		StringWriter writer = new StringWriter();
 		VelocityContext context = new VelocityContext();
 		
-		Velocity.mergeTemplate("web.xml.vm", "UTF-8", context, writer);
+		velocityEngine.mergeTemplate("web.xml.vm", "UTF-8", context, writer);
 		webResource.createWebResource(writer.toString(), "WEB-INF/web.xml");
 
 		context = new VelocityContext();
 		context.put("basePackage", javaFacet.getBasePackage());
 		context.put("description", mvnFacet.getPOM().getName());
 		writer = new StringWriter();
-		Velocity.mergeTemplate("index.html.vm", "UTF-8", context, writer);
+		velocityEngine.mergeTemplate("index.html.vm", "UTF-8", context, writer);
 		webResource.createWebResource(writer.toString(), "index.html");
 	}
 
@@ -182,8 +183,11 @@ public class GWTFacet extends BaseFacet {
 
 		plugin.setConfiguration(dom);
 		pom.getBuild().getPlugins().add(plugin);
+		Repository mvp4gRepo = new Repository();
+		mvp4gRepo.setId("mvp4g");
+		mvp4gRepo.setUrl("http://mvp4g.googlecode.com/svn/maven2/releases");
+		pom.getRepositories().add(mvp4gRepo);
 		mvnFacet.setPOM(pom);
-
 		pom.getBuild().setOutputDirectory("${webappDirectory}/WEB-INF/classes");
 		pom.getProperties().put("webappDirectory", "src/main/webapp");
 		mvnFacet.setPOM(pom);
@@ -281,7 +285,7 @@ public class GWTFacet extends BaseFacet {
 		
 		VelocityContext velocityContext = new VelocityContext();
 		StringWriter stringWriter = new StringWriter();
-		Velocity.mergeTemplate("Messages.vm", "UTF-8", velocityContext, stringWriter);
+		velocityEngine.mergeTemplate("Messages.vm", "UTF-8", velocityContext, stringWriter);
 		resources.createResource(stringWriter.toString().toCharArray(), name.replace('.', '/') + "/Messages.properties");
 		
 	}
@@ -294,7 +298,7 @@ public class GWTFacet extends BaseFacet {
 		velocityContext.put("basePackage", java.getBasePackage());
 		
 		StringWriter stringWriter = new StringWriter();
-		Velocity.mergeTemplate("mvp/ViewImpl.ui.xml.vm", "UTF-8", velocityContext, stringWriter);
+		velocityEngine.mergeTemplate("mvp/ViewImpl.ui.xml.vm", "UTF-8", velocityContext, stringWriter);
 		resources.createResource(stringWriter.toString().toCharArray(), java.getBasePackage().replace('.', '/') + String.format("/%s/%sViewImpl.ui.xml", name, classPrefix));
 	}
 	
@@ -310,7 +314,7 @@ public class GWTFacet extends BaseFacet {
 		velocityContext.put("basePackage", java.getBasePackage());
 		
 		StringWriter stringWriter = new StringWriter();
-		Velocity.mergeTemplate("Module.gwt.xml.vm", "UTF-8", velocityContext, stringWriter);
+		velocityEngine.mergeTemplate("Module.gwt.xml.vm", "UTF-8", velocityContext, stringWriter);
 		resources.createResource(stringWriter.toString().toCharArray(),  name.replace('.', '/')  + String.format("/%s.gwt.xml", classPrefix));
 	}
 	
@@ -329,7 +333,7 @@ public class GWTFacet extends BaseFacet {
 		
 		
 		StringWriter stringWriter = new StringWriter();
-		Velocity.mergeTemplate(template, "UTF-8", velocityContext, stringWriter);
+		velocityEngine.mergeTemplate(template, "UTF-8", velocityContext, stringWriter);
 		
 		JavaType<?> serviceClass = JavaParser.parse(JavaType.class,
 				stringWriter.toString());
