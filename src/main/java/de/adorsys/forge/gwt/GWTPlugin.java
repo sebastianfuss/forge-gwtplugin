@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.forge.maven.MavenCoreFacet;
 import org.jboss.forge.parser.java.Annotation;
+import org.jboss.forge.parser.java.Import;
 import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.parser.java.Method;
@@ -152,8 +153,18 @@ public class GWTPlugin implements Plugin {
 	private void addEventMethod(final PipeOut out,
 			JavaSourceFacet javafacet, Method<JavaInterface> eventMethod,
 			String literalValue) throws FileNotFoundException {
+		
 		String[] presenter = literalValue.replace("{", "").replace("}", "").replaceAll(".class", "").split(",");
 		for (String presenterName : presenter) {
+			
+			List<Import> imports = eventMethod.getOrigin().getImports();
+			for (Import imp : imports) {
+				if(imp.getSimpleName().equals(presenterName)) {
+					presenterName = imp.getQualifiedName();
+					break;
+				}
+			}
+			
 			JavaResource presenterResource = javafacet.getJavaResource(presenterName);
 			if(!presenterResource.exists()){
 				ShellMessages.error(out, String.format("Presenter not found: %s ", presenterName));
@@ -169,6 +180,7 @@ public class GWTPlugin implements Plugin {
 			
 			String eventName = "on" + StringUtils.capitalize(eventMethod.getName());
 			eventMethod.setName(eventName);
+			eventMethod.setPublic();
 			String method = eventMethod.toString().replace(';', ' ');
 			String signature = eventMethod.toSignature().replaceFirst(eventMethod.getName(), eventName);
 			if (!presenterSource.hasMethodSignature(eventMethod)){

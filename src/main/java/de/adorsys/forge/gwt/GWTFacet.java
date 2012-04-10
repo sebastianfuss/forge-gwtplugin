@@ -309,13 +309,12 @@ public class GWTFacet extends BaseFacet {
 		VelocityContext velocityContext = new VelocityContext();
 		
 		String name = java.getBasePackage();
-		String classPrefix = getClassPrefix(mvnFacet);
-		velocityContext.put("classPrefix", classPrefix);
+		velocityContext.put("classPrefix", getClassPrefix(mvnFacet));
 		velocityContext.put("basePackage", java.getBasePackage());
 		
 		StringWriter stringWriter = new StringWriter();
 		velocityEngine.mergeTemplate("Module.gwt.xml.vm", "UTF-8", velocityContext, stringWriter);
-		resources.createResource(stringWriter.toString().toCharArray(),  name.replace('.', '/')  + String.format("/%s.gwt.xml", classPrefix));
+		resources.createResource(stringWriter.toString().toCharArray(),  name.replace('.', '/')  + String.format("/%s.gwt.xml", mvnFacet.getPOM().getArtifactId()));
 	}
 	
 	private void createJavaSource(String template) {
