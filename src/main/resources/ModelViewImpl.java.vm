@@ -18,18 +18,38 @@ package ${java.basePackage}.widgets;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.IsWidget;
-import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.IntegerBox;
+import com.google.gwt.user.client.ui.LongBox;
+import com.google.gwt.user.client.ui.DoubleBox;
 import com.google.gwt.user.client.ui.Widget;
-import com.google.inject.Inject;
-
 
 public class ${javaSource.name}Widget extends Composite {
 
     private static RootViewUiBinder uiBinder = GWT.create( RootViewUiBinder.class );
 
-    interface RootViewUiBinder extends UiBinder<Widget, ${nameClassPrefix}ViewImpl> {
+    interface RootViewUiBinder extends UiBinder<Widget, ${javaSource.name}Widget> {
     }
+    
+    #foreach( $field in $javaSource.fields )
+	@UiField
+	#if ($field.primitive || $field.qualifiedType.indexOf("java.lang.") != -1)
+		## Basic Type
+		#if ($field.type == "int" || $field.type == "Integer")
+	IntegerBox ${field.name};
+		#elseif ($field.type == "long" || $field.type == "Long")
+	LongBox ${field.name};
+		#elseif ($field.type == "double" || $field.type == "Double")
+	DoubleBox ${field.name};
+		#elseif ($field.type == "String")
+	TextBox ${field.name};
+		#end
+	#else
+	## complex Type
+	${field.type}Widget ${field.name};
+	#end
+	#end
 
     public ${javaSource.name}Widget() {
         initWidget( uiBinder.createAndBindUi( this ) );

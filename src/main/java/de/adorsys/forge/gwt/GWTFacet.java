@@ -20,13 +20,19 @@ package de.adorsys.forge.gwt;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.inject.Inject;
 
@@ -52,6 +58,7 @@ import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.project.facets.WebResourceFacet;
+import org.jboss.forge.resources.FileResource;
 import org.jboss.forge.resources.java.JavaResource;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
@@ -65,7 +72,7 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 		DependencyFacet.class, WebResourceFacet.class })
 public class GWTFacet extends BaseFacet {
 	
-	private VelocityEngine velocityEngine;
+	private final VelocityEngine velocityEngine;
 	
 	private final DependencyInstaller installer;
 
@@ -149,8 +156,8 @@ public class GWTFacet extends BaseFacet {
 		plugin.setArtifactId("gwt-maven-plugin");
 		plugin.setGroupId("org.codehaus.mojo");
 		
-		String gwtModule = getGwtModuleName();
-		String gwtMessages = getGwtMessages();
+		String gwtModule = getModuleName();
+		String gwtMessages = getMessagesQualified();
 
 		Xpp3Dom dom;
 		try {
@@ -193,14 +200,14 @@ public class GWTFacet extends BaseFacet {
 		mvnFacet.setPOM(pom);
 	}
 
-	private String getGwtMessages() {
+	public String getMessagesQualified() {
 		final JavaSourceFacet javaSourceFacet = project.getFacet(JavaSourceFacet.class);
 		String basePackage = javaSourceFacet.getBasePackage();
 		String gwtMessages = basePackage + ".Messages";
 		return gwtMessages;
 	}
 	
-	private String getGwtModuleName() {
+	public String getModuleName() {
 		final JavaSourceFacet javaSourceFacet = project.getFacet(JavaSourceFacet.class);
 		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
 		String basePackage = javaSourceFacet.getBasePackage();
@@ -279,14 +286,43 @@ public class GWTFacet extends BaseFacet {
 	}
 	
 	private void createGWTMessages() {
-		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
 		ResourceFacet resources = project.getFacet(ResourceFacet.class);
-		String name = java.getBasePackage();
-		
 		VelocityContext velocityContext = new VelocityContext();
 		StringWriter stringWriter = new StringWriter();
 		velocityEngine.mergeTemplate("Messages.vm", "UTF-8", velocityContext, stringWriter);
-		resources.createResource(stringWriter.toString().toCharArray(), name.replace('.', '/') + "/Messages.properties");
+		resources.createResource(stringWriter.toString().toCharArray(),getMessagePropertiesPath());
+	}
+
+	public String getMessagePropertiesPath() {
+		return getMessagesQualified().replace('.', '/') + ".properties";
+	}
+	
+	public void addMessages(Map<String, String> messages){
+		Properties properties = new Properties();
+		ResourceFacet resources = project.getFacet(ResourceFacet.class);
+		MavenCoreFacet maven = project.getFacet(MavenCoreFacet.class);
+		FileResource<?> resource = resources.getResource(getMessagePropertiesPath());
+		InputStream is = resource.getResourceInputStream();
+		FileOutputStream fileOutputStream = null;
+		try {
+			properties.load(new InputStreamReader(is, "UTF-8"));
+			is.close();
+			properties.putAll(messages);
+			fileOutputStream = new FileOutputStream(resource.getUnderlyingResourceObject());
+			properties.store(new OutputStreamWriter(fileOutputStream, "UTF-8"), null);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				is.close();
+				fileOutputStream.close();
+			} catch (IOException e) {
+			}
+		}
+		
+		maven.executeMaven(Arrays.asList("generate-resources"));
 		
 	}
 	

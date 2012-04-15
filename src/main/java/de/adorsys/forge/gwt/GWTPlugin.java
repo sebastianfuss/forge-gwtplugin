@@ -16,22 +16,33 @@
 package de.adorsys.forge.gwt;
 
 import java.io.FileNotFoundException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.jboss.forge.maven.MavenCoreFacet;
+import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.Annotation;
+import org.jboss.forge.parser.java.Field;
 import org.jboss.forge.parser.java.Import;
 import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.parser.java.JavaInterface;
+import org.jboss.forge.parser.java.JavaSource;
+import org.jboss.forge.parser.java.JavaType;
 import org.jboss.forge.parser.java.Method;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.facets.JavaSourceFacet;
+import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.project.facets.events.InstallFacets;
 import org.jboss.forge.resources.java.JavaResource;
 import org.jboss.forge.shell.PromptType;
@@ -73,6 +84,17 @@ public class GWTPlugin implements Plugin {
 	@Inject
 	private Shell shell;
 
+	private VelocityEngine velocityEngine;
+	
+	public GWTPlugin() {
+		velocityEngine = new VelocityEngine();
+		velocityEngine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
+		velocityEngine.setProperty("classpath.resource.loader.class", 
+		    ClasspathResourceLoader.class.getName());
+		velocityEngine.setProperty( RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS,
+			      "org.apache.velocity.runtime.log.JdkLogChute" );
+	}
+
 	@SetupCommand
 	@Command(value = "setup", help = "Setup a gwt project")
 	public void setup(
@@ -105,6 +127,52 @@ public class GWTPlugin implements Plugin {
 	public void addMvp4g() {
 		GWTFacet facet = project.getFacet(GWTFacet.class);
 		facet.setupMVP4G();
+	}
+	
+	@Command(value = "generate-view", help = "generates a view from a bean")
+	public void generateView(@Option(required = false) JavaResource[] targets, final PipeOut out) {
+		if (targets != null) {
+			for (JavaResource javaResource : targets) {
+				generateView(javaResource, out);
+			}
+		} else if (resource != null) {
+			generateView(resource, out);
+		}
+	}
+	
+	private void generateView(JavaResource resouce, final PipeOut out) {
+		try {
+			JavaSource<?> javaSource = resouce.getJavaSource();
+			if (javaSource instanceof JavaClass) {
+				ResourceFacet resources = project.getFacet(ResourceFacet.class);
+				JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+				GWTFacet gwtFacet = project.getFacet(GWTFacet.class);
+
+				VelocityContext velocityContext = new VelocityContext();
+				velocityContext.put("javaSource", javaSource);
+				velocityContext.put("gwt", gwtFacet);
+				velocityContext.put("java", java);
+				HashMap<String, String> msgCollector = new HashMap<String, String>();
+				velocityContext.put("msgCollector", msgCollector);
+				
+				StringWriter stringWriter = new StringWriter();
+				velocityEngine.mergeTemplate("ModelViewImpl.ui.xml.vm", "UTF-8", velocityContext, stringWriter);
+				String fqViewName = java.getBasePackage().concat(".wigdets.").concat(javaSource.getName()).concat("Widget");
+				resources.createResource(stringWriter.toString().toCharArray(), fqViewName.replace('.', '/') + ".ui.xml");
+				
+				stringWriter = new StringWriter();
+				velocityEngine.mergeTemplate("ModelViewImpl.java.vm", "UTF-8", velocityContext, stringWriter);
+				JavaType<?> serviceClass = JavaParser.parse(JavaType.class,	stringWriter.toString());
+				java.saveJavaSource(serviceClass);
+
+				if (!msgCollector.isEmpty()) {
+					ShellMessages.info(out, String.format("Collecting %s new messages from UI template", msgCollector.size()));
+					gwtFacet.addMessages(msgCollector);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			ShellMessages.error(out, "Bean source not found!" + e);
+		}
 	}
 
 	@Command(value = "new-mvp", help = "creates a mvp package")
