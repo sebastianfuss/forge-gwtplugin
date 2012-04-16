@@ -16,6 +16,7 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
 	xmlns:e="urn:import:com.google.gwt.editor.ui.client"
+	xmlns:date="urn:import:com.google.gwt.user.datepicker.client"
 	xmlns:mod="urn:import:${java.basePackage}.widgets"
 	>
 	<ui:with field='msg' type='${gwt.messagesQualified}'/>
@@ -45,6 +46,9 @@
 				#end
 			</e:valuebox>
 		</e:ValueBoxEditorDecorator>
+		#elseif ($field.qualifiedType == "java.util.Date")
+			<label><ui:text from='{msg.${labelmsg}}' /></label><br />
+			<date:DateBox ui:field='${field.name}' />
 		#else
 		## complex Type
 		<mod:${field.type}Widget ui:field='${field.name}' />

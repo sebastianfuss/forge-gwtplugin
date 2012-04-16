@@ -26,12 +26,15 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.editor.client.Editor;
 import com.google.gwt.editor.client.SimpleBeanEditorDriver;
 import com.google.gwt.editor.ui.client.ValueBoxEditorDecorator;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.datepicker.client.DateBox;
 
 public class ${javaSource.name}Widget extends Composite implements Editor<${javaSource.name}> {
 
@@ -58,6 +61,8 @@ public class ${javaSource.name}Widget extends Composite implements Editor<${java
 		#elseif ($field.type == "String")
 	ValueBoxEditorDecorator<String> ${field.name};
 		#end
+	#elseif ($field.qualifiedType == "java.util.Date")
+	DateBox ${field.name};
 	#else
 	## complex Type
 	${field.type}Widget ${field.name};
@@ -72,6 +77,12 @@ public class ${javaSource.name}Widget extends Composite implements Editor<${java
 		initWidget(UI_BINDER.createAndBindUi(this));
 		editorDriver.initialize(this);
 		editorDriver.edit(dataObject);
+		
+		#foreach( $field in $javaSource.fields )
+			#if ($field.qualifiedType == "java.util.Date")
+		${field.name}.setFormat(new DateBox.DefaultFormat(DateTimeFormat.getFormat(PredefinedFormat.DATE_SHORT)));
+			#end
+		#end
 	}
 
 	public ${javaSource.name}EditorDriver getEditorDriver() {
