@@ -33,7 +33,6 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.jboss.forge.maven.MavenCoreFacet;
 import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.Annotation;
-import org.jboss.forge.parser.java.Field;
 import org.jboss.forge.parser.java.Import;
 import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.parser.java.JavaInterface;
@@ -157,7 +156,7 @@ public class GWTPlugin implements Plugin {
 				
 				StringWriter stringWriter = new StringWriter();
 				velocityEngine.mergeTemplate("ModelViewImpl.ui.xml.vm", "UTF-8", velocityContext, stringWriter);
-				String fqViewName = java.getBasePackage().concat(".wigdets.").concat(javaSource.getName()).concat("Widget");
+				String fqViewName = java.getBasePackage().concat(".widgets.").concat(javaSource.getName()).concat("Widget");
 				resources.createResource(stringWriter.toString().toCharArray(), fqViewName.replace('.', '/') + ".ui.xml");
 				
 				stringWriter = new StringWriter();

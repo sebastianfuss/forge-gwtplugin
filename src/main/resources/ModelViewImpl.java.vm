@@ -15,44 +15,62 @@
  *#
 package ${java.basePackage}.widgets;
 
+import  ${javaSource.qualifiedName};
+
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.editor.client.Editor;
+import com.google.gwt.editor.client.SimpleBeanEditorDriver;
+import com.google.gwt.editor.ui.client.ValueBoxEditorDecorator;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.IntegerBox;
-import com.google.gwt.user.client.ui.LongBox;
-import com.google.gwt.user.client.ui.DoubleBox;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
-public class ${javaSource.name}Widget extends Composite {
+public class ${javaSource.name}Widget extends Composite implements Editor<${javaSource.name}> {
 
-    private static RootViewUiBinder uiBinder = GWT.create( RootViewUiBinder.class );
+	private static final ${javaSource.name}UiBinder UI_BINDER = GWT.create(${javaSource.name}UiBinder.class);
 
-    interface RootViewUiBinder extends UiBinder<Widget, ${javaSource.name}Widget> {
-    }
+	private final ${javaSource.name}EditorDriver editorDriver = GWT.create(${javaSource.name}EditorDriver.class);
+
+	interface ${javaSource.name}UiBinder extends UiBinder<Widget, ${javaSource.name}Widget> {
+	}
+	
+	public interface ${javaSource.name}EditorDriver extends SimpleBeanEditorDriver<${javaSource.name}, ${javaSource.name}Widget> {
+	}
     
     #foreach( $field in $javaSource.fields )
 	@UiField
 	#if ($field.primitive || $field.qualifiedType.indexOf("java.lang.") != -1)
 		## Basic Type
 		#if ($field.type == "int" || $field.type == "Integer")
-	IntegerBox ${field.name};
+	ValueBoxEditorDecorator<Integer> ${field.name};
 		#elseif ($field.type == "long" || $field.type == "Long")
-	LongBox ${field.name};
+	ValueBoxEditorDecorator<Long> ${field.name};
 		#elseif ($field.type == "double" || $field.type == "Double")
-	DoubleBox ${field.name};
+	ValueBoxEditorDecorator<Double> ${field.name};
 		#elseif ($field.type == "String")
-	TextBox ${field.name};
+	ValueBoxEditorDecorator<String> ${field.name};
 		#end
 	#else
 	## complex Type
 	${field.type}Widget ${field.name};
 	#end
 	#end
+	
+	public ${javaSource.name}Widget() {
+		this(new ${javaSource.name}());
+	}
+	
+	public ${javaSource.name}Widget(${javaSource.name} dataObject) {
+		initWidget(UI_BINDER.createAndBindUi(this));
+		editorDriver.initialize(this);
+		editorDriver.edit(dataObject);
+	}
 
-    public ${javaSource.name}Widget() {
-        initWidget( uiBinder.createAndBindUi( this ) );
-    }
+	public ${javaSource.name}EditorDriver getEditorDriver() {
+		return editorDriver;
+	}
 
 }
