@@ -34,8 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.PluginExecution;
@@ -52,7 +50,6 @@ import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.JavaType;
 import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
-import org.jboss.forge.project.dependencies.DependencyInstaller;
 import org.jboss.forge.project.facets.BaseFacet;
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
@@ -74,12 +71,8 @@ public class GWTFacet extends BaseFacet {
 	
 	private final VelocityEngine velocityEngine;
 	
-	private final DependencyInstaller installer;
-
-	@Inject
-	public GWTFacet(DependencyInstaller installer) {
+	public GWTFacet() {
 		super();
-		this.installer = installer;
 		velocityEngine = new VelocityEngine();
 		velocityEngine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
 		velocityEngine.setProperty("classpath.resource.loader.class", 
@@ -222,9 +215,9 @@ public class GWTFacet extends BaseFacet {
 //			if (!installer.isInstalled(project, requirement)) {
 //				if (!facet.hasDirectManagedDependency(requirement)) {
 					facet.addDirectManagedDependency(requirement);
+					facet.addDirectDependency(DependencyBuilder.create(requirement).setVersion(null));
 //				}
 				System.out.println(requirement);
-				installer.install(project, requirement,	requirement.getScopeTypeEnum());
 //			}
 		}
 	}
@@ -244,7 +237,7 @@ public class GWTFacet extends BaseFacet {
 		
 		Dependency mvp4g = DependencyBuilder
 				.create("com.googlecode.mvp4g:mvp4g:1.4.0:compile:jar");
-		mvp4g.getExcludedDependencies().add(DependencyBuilder.create("gwt-servlet:com.google.gwt"));
+		mvp4g.getExcludedDependencies().add(DependencyBuilder.create("com.google.gwt:gwt-servlet"));
 
 		Dependency hibernateValidatorSources = DependencyBuilder
 				.create("org.hibernate:hibernate-validator:4.2.0.Final:compile:jar").setClassifier("sources");
@@ -305,9 +298,10 @@ public class GWTFacet extends BaseFacet {
 		InputStream is = resource.getResourceInputStream();
 		FileOutputStream fileOutputStream = null;
 		try {
+			//prefer the user messages
+			properties.putAll(messages);
 			properties.load(new InputStreamReader(is, "UTF-8"));
 			is.close();
-			properties.putAll(messages);
 			fileOutputStream = new FileOutputStream(resource.getUnderlyingResourceObject());
 			properties.store(new OutputStreamWriter(fileOutputStream, "UTF-8"), null);
 		} catch (UnsupportedEncodingException e) {
