@@ -64,9 +64,7 @@ public class ${javaSource.name}Widget extends Composite implements Editor<${java
 	#elseif ($field.qualifiedType == "java.util.Date")
 	DateBox ${field.name};
 	#elseif ($field.qualifiedType == "java.util.List")
-	
-	List<${field.typeInspector.typeArguments[0]}> ${field.name};
-	
+	${field.typeInspector.typeArguments[0]}ListWidget ${field.name};
 	#else
 	## complex Type
 	${field.type}Widget ${field.name};

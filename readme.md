@@ -19,9 +19,10 @@ How to install:
  	? [project directory (of type org.jboss.forge.resources.Resource)]: .`
 
 Getting started:
-=============
+================
 
-**Create your project**
+Create your project
+-------------------
 
 	[no project] adorsys $ new-project --named gwtmvp --topLevelPackage de.adorsys.gwtmvp --type war
 	
@@ -38,7 +39,8 @@ Getting started:
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/resources/META-INF/forge.xml
 
 
-**Setup GWT base configuration**
+Setup GWT base configuration
+----------------------------
 
 	[gwtmvp] gwtmvp $ gwt setup
 	
@@ -68,7 +70,8 @@ Getting started:
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/java/de/adorsys/gwtmvp/application/ApplicationViewImpl.java
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/resources/de/adorsys/gwtmvp/application/ApplicationViewImpl.ui.xml
 	
-**Create a MVP dialog**
+Create a MVP dialog
+-------------------
 	
 	[gwtmvp] MenuePresenterImpl.java $ gwt new-mvp menu
 
@@ -77,8 +80,23 @@ Getting started:
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/java/de/adorsys/gwtmvp/menu/MenuView.java
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/java/de/adorsys/gwtmvp/menu/MenuViewImpl.java
 	Wrote /Users/sso/Documents/dev/adorsys/gwtmvp/src/main/resources/de/adorsys/gwtmvp/menu/MenuViewImpl.ui.xml
+	
+Generate a widget from a model type
+-----------------------------------
 
-**Wire a event between eventbus and presenter**
+This is helpful if you need a default representation of a modeltype that you can change to your preferences.
+Another cool thing is that your message properties are automatically extended for each property label description.
+
+	gwt generate-view torben.model.Person.java --edit --table --list
+	
+* `--edit` generates a editable widget be the given type properties
+* `--table` generates a table widget of the given type
+* `--list` generates a list widget of the given type that renders the singe type widget for each entry
+
+**TODO** For now there is no override check implemented, so be careful, files are overridden!
+
+Wire a event between eventbus and presenter
+-------------------------------------------
 
 Add your event (myEvent) to the EventBus Interface
 
@@ -95,13 +113,14 @@ Add your event (myEvent) to the EventBus Interface
 	
 	gwt wire-events 
 	
-**Test your new app**
+Test your new app
+-----------------
 
-	* ``gwt run``
+	* `gwt run`
 	
-	* ``gwt debug``
+	* `gwt debug`
 	
 
-/Happy coding
+**/Happy coding**
 	
 

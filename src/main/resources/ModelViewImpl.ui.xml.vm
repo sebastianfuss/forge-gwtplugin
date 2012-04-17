@@ -22,14 +22,10 @@
 	<ui:with field='msg' type='${gwt.messagesQualified}'/>
 	<g:HTMLPanel>
 		#set( $tmp = $msgCollector.put($javaSource.name, $javaSource.name) )
-		
 		<h2><ui:text from='{msg.${javaSource.name}}' /></h2>
-		
 		#foreach( $field in $javaSource.fields )
-		
 		#set( $labelmsg = "${javaSource.name}_${field.name}")
 		#set( $tmp = $msgCollector.put($labelmsg, $field.name) )
-		
 		#if ($field.primitive || $field.qualifiedType.indexOf("java.lang.") != -1)
 		<label><ui:text from='{msg.${labelmsg}}' /></label><br />
 		<e:ValueBoxEditorDecorator ui:field='${field.name}'>
@@ -46,9 +42,11 @@
 				#end
 			</e:valuebox>
 		</e:ValueBoxEditorDecorator>
+		#elseif ($field.qualifiedType == "java.util.List")
+		<mod:${field.typeInspector.typeArguments[0]}ListWidget ui:field='${field.name}' />
 		#elseif ($field.qualifiedType == "java.util.Date")
-			<label><ui:text from='{msg.${labelmsg}}' /></label><br />
-			<date:DateBox ui:field='${field.name}' />
+		<label><ui:text from='{msg.${labelmsg}}' /></label><br />
+		<date:DateBox ui:field='${field.name}' />
 		#else
 		## complex Type
 		<mod:${field.type}Widget ui:field='${field.name}' />
