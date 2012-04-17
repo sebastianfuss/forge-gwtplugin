@@ -67,6 +67,8 @@ import org.jboss.forge.shell.plugins.SetupCommand;
 @Help("A plugin that helps to build gwt interfaces.")
 public class GWTPlugin implements Plugin {
 
+	private static final VelocityUtil VELOCITY_UTIL = new VelocityUtil();
+
 	@Inject
 	private Event<InstallFacets> event;
 
@@ -129,17 +131,36 @@ public class GWTPlugin implements Plugin {
 	}
 	
 	@Command(value = "generate-view", help = "generates a view from a bean")
-	public void generateView(@Option(required = false) JavaResource[] targets, final PipeOut out) {
+	public void generateView(
+			@Option(required = false) JavaResource[] targets,
+			@Option(name="table", description="generates a table widget from the given model type" , flagOnly=true) boolean table,
+			@Option(name="edit", description="generates a edit widget from the given model type" , flagOnly=true) boolean edit,
+			@Option(name="list", description="generates a list widget from the given model type", flagOnly=true) boolean list,
+			final PipeOut out
+			) {
 		if (targets != null) {
 			for (JavaResource javaResource : targets) {
-				generateView(javaResource, out);
+				generateFromModel(list, table, edit, out, javaResource);
 			}
 		} else if (resource != null) {
-			generateView(resource, out);
+			generateFromModel(list, table, edit, out, resource);
+		}
+	}
+
+	private void generateFromModel(boolean list, boolean table, boolean edit,
+			final PipeOut out, JavaResource javaResource) {
+		if (list) {
+			generate(javaResource, "List", "ListModelViewImpl.java.vm", null, out);
+		}
+		if (table) {
+			generate(javaResource, "Table", "TableModelViewImpl.java.vm", "TableModelViewImpl.ui.xml.vm", out);
+		}
+		if (edit) {
+			generate(javaResource, "", "ModelViewImpl.java.vm", "ModelViewImpl.ui.xml.vm", out);
 		}
 	}
 	
-	private void generateView(JavaResource resouce, final PipeOut out) {
+	private void generate(JavaResource resouce, String sufix, String javaTemplate, String uiTemplate, final PipeOut out) {
 		try {
 			JavaSource<?> javaSource = resouce.getJavaSource();
 			if (javaSource instanceof JavaClass) {
@@ -151,18 +172,25 @@ public class GWTPlugin implements Plugin {
 				velocityContext.put("javaSource", javaSource);
 				velocityContext.put("gwt", gwtFacet);
 				velocityContext.put("java", java);
+				velocityContext.put("util", VELOCITY_UTIL);
+				
 				HashMap<String, String> msgCollector = new HashMap<String, String>();
 				velocityContext.put("msgCollector", msgCollector);
 				
-				StringWriter stringWriter = new StringWriter();
-				velocityEngine.mergeTemplate("ModelViewImpl.ui.xml.vm", "UTF-8", velocityContext, stringWriter);
-				String fqViewName = java.getBasePackage().concat(".widgets.").concat(javaSource.getName()).concat("Widget");
-				resources.createResource(stringWriter.toString().toCharArray(), fqViewName.replace('.', '/') + ".ui.xml");
+				StringWriter stringWriter;
+				if (uiTemplate != null) {
+					stringWriter = new StringWriter();
+					velocityEngine.mergeTemplate(uiTemplate, "UTF-8", velocityContext, stringWriter);
+					String fqViewName = java.getBasePackage().concat(".widgets.").concat(javaSource.getName()).concat(sufix).concat("Widget");
+					resources.createResource(stringWriter.toString().toCharArray(), fqViewName.replace('.', '/') + ".ui.xml");
+				}
 				
-				stringWriter = new StringWriter();
-				velocityEngine.mergeTemplate("ModelViewImpl.java.vm", "UTF-8", velocityContext, stringWriter);
-				JavaType<?> serviceClass = JavaParser.parse(JavaType.class,	stringWriter.toString());
-				java.saveJavaSource(serviceClass);
+				if (javaTemplate != null) {
+					stringWriter = new StringWriter();
+					velocityEngine.mergeTemplate(javaTemplate, "UTF-8", velocityContext, stringWriter);
+					JavaType<?> serviceClass = JavaParser.parse(JavaType.class,	stringWriter.toString());
+					java.saveJavaSource(serviceClass);
+				}
 
 				if (!msgCollector.isEmpty()) {
 					ShellMessages.info(out, String.format("Collecting %s new messages from UI template", msgCollector.size()));
