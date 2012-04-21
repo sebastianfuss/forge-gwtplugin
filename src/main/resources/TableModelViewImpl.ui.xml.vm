@@ -18,7 +18,7 @@
 	xmlns:date="urn:import:com.google.gwt.user.datepicker.client"
 	xmlns:mod="urn:import:${java.basePackage}.widgets"
 	xmlns:cell="urn:import:com.google.gwt.user.cellview.client">
-	<ui:with field='msg' type='torben.Messages' />
+	<ui:with field='msg' type='${gwt.messagesQualified}' />
 	<g:HTMLPanel>
 		<cell:CellTable ui:field="table"/>
 		<cell:SimplePager ui:field="pager"/>

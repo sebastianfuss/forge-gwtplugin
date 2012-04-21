@@ -39,6 +39,7 @@ import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.parser.java.JavaSource;
 import org.jboss.forge.parser.java.JavaType;
 import org.jboss.forge.parser.java.Method;
+import org.jboss.forge.parser.java.Parameter;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
@@ -250,6 +251,17 @@ public class GWTPlugin implements Plugin {
 			String literalValue) throws FileNotFoundException {
 		
 		String[] presenter = literalValue.replace("{", "").replace("}", "").replaceAll(".class", "").split(",");
+		List<Annotation<JavaInterface>> annotations = eventMethod.getAnnotations();
+		for (Annotation<JavaInterface> a : annotations) {
+			eventMethod.removeAnnotation(a);
+		}
+		
+		String eventName = "on" + StringUtils.capitalize(eventMethod.getName());
+		eventMethod.setName(eventName);
+		eventMethod.setPublic();
+		String method = eventMethod.toString().replace(';', ' ');
+		String signature = eventMethod.toSignature().replaceFirst(eventMethod.getName(), eventName);
+		
 		for (String presenterName : presenter) {
 			
 			List<Import> imports = eventMethod.getOrigin().getImports();
@@ -268,18 +280,13 @@ public class GWTPlugin implements Plugin {
 			
 			JavaClass presenterSource = (JavaClass) presenterResource.getJavaSource();
 			
-			List<Annotation<JavaInterface>> annotations = eventMethod.getAnnotations();
-			for (Annotation<JavaInterface> a : annotations) {
-				eventMethod.removeAnnotation(a);
-			}
-			
-			String eventName = "on" + StringUtils.capitalize(eventMethod.getName());
-			eventMethod.setName(eventName);
-			eventMethod.setPublic();
-			String method = eventMethod.toString().replace(';', ' ');
-			String signature = eventMethod.toSignature().replaceFirst(eventMethod.getName(), eventName);
 			if (!presenterSource.hasMethodSignature(eventMethod)){
 				presenterSource.addMethod(method + "{\n}");
+				List<Parameter> parameters = eventMethod.getParameters();
+				for (Parameter parameter : parameters) {
+					presenterSource.addImport(parameter.getTypeInspector().getQualifiedName());
+				}
+				
 				ShellMessages.info(out, String.format(" - %s : created event method %s", presenterSource.getName(), signature));
 				javafacet.saveJavaSource(presenterSource);
 			}

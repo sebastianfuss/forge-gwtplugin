@@ -16,8 +16,9 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
 	xmlns:e="urn:import:com.google.gwt.editor.ui.client"
-	xmlns:mod="urn:import:torben.widgets"
+	xmlns:mod="urn:import:${java.basePackage}.widgets"
 	>
+	<ui:with field='msg' type='${gwt.messagesQualified}' />
 	<g:HTMLPanel>
 		<h1>Hello World!</h1>
 	</g:HTMLPanel>

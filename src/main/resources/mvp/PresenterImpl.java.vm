@@ -26,7 +26,4 @@ import ${basePackage}.${name}.${nameClassPrefix}View.${nameClassPrefix}Presenter
 @Presenter( view = ${nameClassPrefix}ViewImpl.class )
 public class ${nameClassPrefix}PresenterImpl extends BasePresenter<${nameClassPrefix}View, ${classPrefix}EventBus> implements ${nameClassPrefix}Presenter {
 	
-    public void onInit() {
-    }
-    
 }
