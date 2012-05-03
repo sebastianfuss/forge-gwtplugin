@@ -10,6 +10,13 @@ How to install:
 * Checkout my Forge bugfix fork (will be removed in the future) `git clone https://xandrox@github.com/xandrox/core.git`
 * build it `cd core` and `mvn install`
 * move dist to your forge installation folder `mv dist/target/forge-distribution-1.0.3-SNAPSHOT ~/forge`
+* set env valibales
+
+    `export FORGE_HOME=~/forge/`
+    
+    `export PATH=$FORGE_HOME/bin:$PATH`
+
+* goto eclipse workspace 
 * `git clone https://xandrox@github.com/xandrox/forge-gwtplugin.git`
 * `cd forge-gwtplugin`
 * run 'forge'
