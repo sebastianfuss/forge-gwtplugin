@@ -22,8 +22,9 @@ How to install:
 * run 'forge'
 * install the gwt plugin
 
-	`[forge-gwt] gwtplugin $ forge source-plugin 
- 	? [project directory (of type org.jboss.forge.resources.Resource)]: .`
+    `[forge-gwt] gwtplugin $ forge source-plugin` 
+    
+    `? [project directory (of type org.jboss.forge.resources.Resource)]: .`
 
 Getting started:
 ================
