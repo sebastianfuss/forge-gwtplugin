@@ -69,6 +69,8 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 		DependencyFacet.class, WebResourceFacet.class })
 public class GWTFacet extends BaseFacet {
 	
+	private static final VelocityUtil VELOCITY_UTIL = new VelocityUtil();
+	
 	private final VelocityEngine velocityEngine;
 	
 	public GWTFacet() {
@@ -325,7 +327,14 @@ public class GWTFacet extends BaseFacet {
 		ResourceFacet resources = project.getFacet(ResourceFacet.class);
 		VelocityContext velocityContext = new VelocityContext();
 		
+		
+		GWTFacet gwtFacet = project.getFacet(GWTFacet.class);
+		
 		velocityContext.put("basePackage", java.getBasePackage());
+		velocityContext.put("gwt", gwtFacet);
+		velocityContext.put("java", java);
+		velocityContext.put("util", VELOCITY_UTIL);
+		
 		
 		StringWriter stringWriter = new StringWriter();
 		velocityEngine.mergeTemplate("mvp/ViewImpl.ui.xml.vm", "UTF-8", velocityContext, stringWriter);
