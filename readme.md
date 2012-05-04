@@ -8,7 +8,7 @@ How to install:
 ===============
   
 * Checkout my Forge bugfix fork (will be removed in the future) `git clone https://xandrox@github.com/xandrox/core.git`
-* build it `cd core` and `mvn install`
+* build it `cd core` and `mvn install -DskipTests`
 * move dist to your forge installation folder `mv dist/target/forge-distribution-1.0.3-SNAPSHOT ~/forge`
 * set env variables
 
