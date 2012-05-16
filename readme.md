@@ -7,16 +7,8 @@ This Forge-Plugin generates a complete GWT-Project  based on MVP with UIBinder, 
 How to install:
 ===============
   
-* Checkout my Forge bugfix fork (will be removed in the future) `git clone https://xandrox@github.com/xandrox/core.git`
-* build it `cd core` and `mvn install -DskipTests`
-* move dist to your forge installation folder `mv dist/target/forge-distribution-1.0.3-SNAPSHOT ~/forge`
-* set env variables
-
-    `export FORGE_HOME=~/forge/`
-    
-    `export PATH=$FORGE_HOME/bin:$PATH`
-
-* go to eclipse workspace 
+* install forge >= 1.4.0.Final
+* change dir to workspace 
 * `git clone https://xandrox@github.com/xandrox/forge-gwtplugin.git`
 * `cd forge-gwtplugin`
 * run 'forge'
