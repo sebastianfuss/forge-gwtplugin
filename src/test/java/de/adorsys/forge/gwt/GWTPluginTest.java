@@ -45,23 +45,25 @@ public class GWTPluginTest extends AbstractShellTest {
 		Project p = initializeProject(PackagingType.WAR);
 		queueInputLines("y");
 		getShell().execute("gwt setup");
+		getShell().execute("mvn install");
 	}
-	
+
 	@Test
 	public void testSetupValidation() throws Exception {
 		Project p = initializeProject(PackagingType.WAR);
 		queueInputLines("y");
 		getShell().execute("gwt setup --no-mvp4g");
+		getShell().execute("mvn install");
 	}
-	
+
 	@Test
 	public void testSetupMvp4g() throws Exception {
 		Project p = initializeProject(PackagingType.WAR);
 		queueInputLines("y");
 		getShell().execute("gwt setup --no-bean-validation");
+		getShell().execute("mvn install");
 	}
 
-	
 	@Test
 	public void testCreateMVP() throws Exception {
 		Project p = initializeProject(PackagingType.WAR);
@@ -70,9 +72,9 @@ public class GWTPluginTest extends AbstractShellTest {
 
 		getShell().execute("gwt setup");
 		getShell().execute("gwt new-mvp foobar");
+		getShell().execute("mvn install");
 	}
-	
-	
+
 	@Test
 	public void testWireEvents() throws Exception {
 		Project p = initializeProject(PackagingType.WAR);
@@ -81,19 +83,25 @@ public class GWTPluginTest extends AbstractShellTest {
 
 		getShell().execute("gwt setup");
 		getShell().execute("gwt new-mvp foobar");
-		
+
 		GWTFacet gwtFacet = p.getFacet(GWTFacet.class);
 		JavaSourceFacet javaFacet = p.getFacet(JavaSourceFacet.class);
 		JavaResource eventBusResource = gwtFacet.getEventBus();
-		JavaInterface eventBus = (JavaInterface) eventBusResource.getJavaSource();
-		
-		Method<JavaInterface> addMethod = eventBus.addMethod("void myEventMethod(String param)");
-		addMethod.addAnnotation("com.mvp4g.client.annotation.Event").setLiteralValue("handlers", "com.test.foobar.FoobarPresenterImpl.class");
+		JavaInterface eventBus = (JavaInterface) eventBusResource
+				.getJavaSource();
+
+		Method<JavaInterface> addMethod = eventBus
+				.addMethod("void myEventMethod(String param)");
+		addMethod.addAnnotation("com.mvp4g.client.annotation.Event")
+				.setLiteralValue("handlers",
+						"de.adorsys.foo.foobar.FoobarPresenterImpl.class");
 		javaFacet.saveJavaSource(eventBus);
 		getShell().execute("gwt wire-events");
+		//dup check
 		getShell().execute("gwt wire-events");
+		getShell().execute("mvn install");
 	}
-	
+
 	@Test
 	@Ignore
 	public void testGwtRun() throws Exception {
@@ -104,6 +112,15 @@ public class GWTPluginTest extends AbstractShellTest {
 		getShell().execute("gwt setup");
 		getShell().execute("gwt run");
 
-		
+	}
+
+	protected Project initializeProject(final PackagingType type)
+			throws Exception {
+		getShell().setCurrentResource(createTempFolder());
+		queueInputLines("");
+		getShell().execute(
+				"new-project --named adorsys.foo --topLevelPackage de.adorsys.foo --type "
+						+ type.toString());
+		return getProject();
 	}
 }
