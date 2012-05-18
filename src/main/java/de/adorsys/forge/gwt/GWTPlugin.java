@@ -313,15 +313,8 @@ public class GWTPlugin implements Plugin {
 		if (a != null) {
 			args.addAll(Arrays.asList(a));
 		}
-		final MavenCoreFacet facet = project.getFacet(MavenCoreFacet.class);
-		Thread gwtRunThread = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				facet.executeMaven(out, args.toArray(new String[0]));
-			}
-		});
-		gwtRunThread.start();
+		final MavenCoreFacet maven = project.getFacet(MavenCoreFacet.class);
+		maven.executeMaven(out, args.toArray(new String[args.size()]));
 	}
 
 }
