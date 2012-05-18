@@ -108,7 +108,6 @@ public class GWTFacet extends BaseFacet {
 		createMVP("application");
 	}
 	
-	
 	private void createWebResources() {
 		final WebResourceFacet webResource = project.getFacet(WebResourceFacet.class);
 		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
@@ -122,7 +121,7 @@ public class GWTFacet extends BaseFacet {
 
 		context = new VelocityContext();
 		context.put("basePackage", javaFacet.getBasePackage());
-		context.put("description", mvnFacet.getPOM().getName());
+		context.put("title", mvnFacet.getMavenProject().getArtifactId());
 		writer = new StringWriter();
 		velocityEngine.mergeTemplate("index.html.vm", "UTF-8", context, writer);
 		webResource.createWebResource(writer.toString(), "index.html");
