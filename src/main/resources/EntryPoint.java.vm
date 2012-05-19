@@ -27,18 +27,17 @@ import com.google.gwt.user.client.ui.Widget;
 import com.mvp4g.client.Mvp4gModule;
 
 /**
- * Dieser Entrypoint setzt spezifische Einstellung die vor dem laden der
- * Anwendung durchgefuehrt werden muessen.
+ * This Entrypoint cares about the setup before launching the app. 
  * 
  * @author Sandro Sonntag
  */
-public class ${classPrefix}EntryPoint implements EntryPoint {
+public class ${gwt.entryPointStandalone} implements EntryPoint {
 
 	private static final String REST_HTTP_SERVER = "http://localhost:8080";
 	private static final Logger LOG = LoggerFactory
-			.getLogger(${classPrefix}EntryPoint.class);
+			.getLogger(${gwt.entryPointStandalone}.class);
 
-	public ${classPrefix}EntryPoint() {
+	public ${gwt.entryPointStandalone}() {
 
 	}
 

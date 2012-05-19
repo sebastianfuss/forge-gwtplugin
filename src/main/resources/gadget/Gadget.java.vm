@@ -1,0 +1,45 @@
+package ${java.basePackage};
+
+import com.google.gwt.gadgets.client.DynamicHeightFeature;
+import com.google.gwt.gadgets.client.Gadget;
+import com.google.gwt.gadgets.client.Gadget.InjectContent;
+import com.google.gwt.gadgets.client.Gadget.AllowHtmlQuirksMode;
+import com.google.gwt.gadgets.client.Gadget.InjectModulePrefs;
+import com.google.gwt.gadgets.client.Gadget.ModulePrefs;
+import com.google.gwt.gadgets.client.Gadget.UseLongManifestName;
+import com.google.gwt.gadgets.client.NeedsDynamicHeight;
+import com.google.gwt.gadgets.client.NeedsSetTitle;
+import com.google.gwt.gadgets.client.SetTitleFeature;
+import com.google.gwt.gadgets.client.UserPreferences;
+
+@ModulePrefs(title = "HelloWorld", author = "adorsys.de", width = 800, height = 1024, scrolling = true)
+@UseLongManifestName(false)
+@AllowHtmlQuirksMode(false)
+@InjectModulePrefs(files = "ModulePrefs.txt")
+@InjectContent(files = "Content.txt")
+public class ${gwt.entryPointGadget} extends Gadget<UserPreferences> implements
+		NeedsSetTitle, NeedsDynamicHeight {
+
+	private static final ${gwt.entryPointStandalone} ENTRY_POINT = new ${gwt.entryPointStandalone}();
+	
+	private DynamicHeightFeature feature;
+
+	public ${gwt.entryPointGadget}() {
+	}
+
+	@Override
+	protected void init(UserPreferences preferences) {
+		ENTRY_POINT.onModuleLoad();
+		feature.adjustHeight();
+	}
+
+	@Override
+	public void initializeFeature(SetTitleFeature feature) {
+	}
+
+	@Override
+	public void initializeFeature(DynamicHeightFeature feature) {
+		this.feature = feature;
+	}
+
+}

@@ -13,9 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * 
- */
 package de.adorsys.forge.gwt;
 
 import java.io.ByteArrayInputStream;
@@ -36,6 +33,7 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.model.Repository;
 import org.apache.velocity.VelocityContext;
@@ -69,6 +67,12 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 @RequiresFacet({ MavenCoreFacet.class, JavaSourceFacet.class,
 		DependencyFacet.class, WebResourceFacet.class })
 public class GWTFacet extends BaseFacet {
+
+	private static final String STANDALONE_SUFIX = "Standalone";
+
+	private static final String GADGET_SUFIX = "Gadget";
+
+	private static final String UTF_8 = "UTF-8";
 
 	private static final VelocityUtil VELOCITY_UTIL = new VelocityUtil();
 
@@ -114,20 +118,17 @@ public class GWTFacet extends BaseFacet {
 	private void createWebResources() {
 		final WebResourceFacet webResource = project
 				.getFacet(WebResourceFacet.class);
-		final JavaSourceFacet javaFacet = project
-				.getFacet(JavaSourceFacet.class);
 
 		StringWriter writer = new StringWriter();
-		VelocityContext context = new VelocityContext();
+		VelocityContext context = createVelocityContext(null);
 
-		velocityEngine.mergeTemplate("web.xml.vm", "UTF-8", context, writer);
+		velocityEngine.mergeTemplate("web.xml.vm", UTF_8, context, writer);
 		webResource.createWebResource(writer.toString(), "WEB-INF/web.xml");
 
-		context = new VelocityContext();
-		context.put("basePackage", javaFacet.getBasePackage());
+		context = createVelocityContext(null);
 		context.put("title", getSaveProjectName());
 		writer = new StringWriter();
-		velocityEngine.mergeTemplate("index.html.vm", "UTF-8", context, writer);
+		velocityEngine.mergeTemplate("index.html.vm", UTF_8, context, writer);
 		webResource.createWebResource(writer.toString(), "index.html");
 	}
 
@@ -155,29 +156,27 @@ public class GWTFacet extends BaseFacet {
 		plugin.setArtifactId("gwt-maven-plugin");
 		plugin.setGroupId("org.codehaus.mojo");
 
-		String gwtModule = getModuleName();
+		String gwtModule = getModuleNameStandalone();
 		String gwtMessages = getMessagesQualified();
 
 		Xpp3Dom dom;
 		try {
 			dom = Xpp3DomBuilder
 					.build(new ByteArrayInputStream(
-							("<configuration>"
-									+ "<i18nMessagesBundles>"
-									+ "			<i18nMessagesBundle>"
-									+ gwtMessages
-									+ "</i18nMessagesBundle>"
-									+ "</i18nMessagesBundles>"
-									+ "	<runTarget>index.html</runTarget>"
-									+ "	<hostedWebapp>${webappDirectory}</hostedWebapp>"
-									+ "<modules>" + "		<module>" + gwtModule
-									+ "</module>" + "</modules>" + "</configuration>")
-									.getBytes()), "UTF-8");
+							("<configuration>" +
+									"<i18nMessagesBundles><i18nMessagesBundle></i18nMessagesBundle></i18nMessagesBundles>" +
+									"<runTarget>index.html</runTarget>" +
+									"<hostedWebapp>${webappDirectory}</hostedWebapp>" +
+									"<modules><module></module></modules></configuration>")
+									.getBytes()), UTF_8);
 		} catch (XmlPullParserException e) {
 			throw new RuntimeException(e);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		plugin.setConfiguration(dom);
+		
+		dom.getChild("i18nMessagesBundles").getChild("i18nMessagesBundle").setValue(gwtMessages);
 
 		List<PluginExecution> executions = plugin.getExecutions();
 		PluginExecution execution = new PluginExecution();
@@ -187,15 +186,50 @@ public class GWTFacet extends BaseFacet {
 		execution.addGoal("compile");
 		executions.add(execution);
 
-		plugin.setConfiguration(dom);
 		pom.getBuild().getPlugins().add(plugin);
-		Repository mvp4gRepo = new Repository();
-		mvp4gRepo.setId("mvp4g");
-		mvp4gRepo.setUrl("http://mvp4g.googlecode.com/svn/maven2/releases");
-		pom.getRepositories().add(mvp4gRepo);
-		mvnFacet.setPOM(pom);
 		pom.getBuild().setOutputDirectory("${webappDirectory}/WEB-INF/classes");
 		pom.getProperties().put("webappDirectory", "src/main/webapp");
+		mvnFacet.setPOM(pom);
+		
+		setGWTModule(gwtModule);
+		addRepository("mvp4g", "http://mvp4g.googlecode.com/svn/maven2/releases");
+	}
+
+	/**
+	 * Set the active gwt module in the pom file. 
+	 * @param gwtModule (without .gwt.xml)
+	 */
+	public void setGWTModule(String gwtModule) {
+		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
+		Model pom = mvnFacet.getPOM();
+		Map<String, Plugin> pluginsAsMap = pom.getBuild().getPluginsAsMap();
+		Plugin gwtPlugin = pluginsAsMap.get("org.codehaus.mojo:gwt-maven-plugin");
+		if (gwtPlugin != null) {
+			Xpp3Dom config = (Xpp3Dom) gwtPlugin.getConfiguration();
+			config.getChild("modules").getChild("module").setValue(gwtModule);
+		}
+		mvnFacet.setPOM(pom);
+	}
+
+	/**
+	 * Add a repository to pom
+	 * @param repoId
+	 * @param repoUrl
+	 */
+	public void addRepository(String repoId, String repoUrl) {
+		Repository mvp4gRepo = new Repository();
+		mvp4gRepo.setId(repoId);
+		mvp4gRepo.setUrl(repoUrl);
+		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
+		Model pom = mvnFacet.getPOM();
+		List<Repository> repositories = pom.getRepositories();
+		for (Repository repository : repositories) {
+			if (repoId.equals(repository.getId())){
+				//noop
+				return;
+			}
+		}
+		repositories.add(mvp4gRepo);
 		mvnFacet.setPOM(pom);
 	}
 
@@ -206,13 +240,65 @@ public class GWTFacet extends BaseFacet {
 		String gwtMessages = basePackage + ".Messages";
 		return gwtMessages;
 	}
+	
+	/**
+	 * Gets the qualified standalone Module.
+	 * @return
+	 */
+	public String getModuleNameStandalone() {
+		return getModuleName() + STANDALONE_SUFIX;
+	}
+	
+	/**
+	 * Gets the qualified gadget module.
+	 * @return
+	 */
+	public String getModuleNameGagdet() {
+		return getModuleName() + GADGET_SUFIX;
+	}
 
+	/**
+	 * Gets the project modulename without a specific entryPoint. 
+	 * @return Module Name
+	 */
 	public String getModuleName() {
 		final JavaSourceFacet javaSourceFacet = project
 				.getFacet(JavaSourceFacet.class);
 		String basePackage = javaSourceFacet.getBasePackage();
-		String gwtModule = basePackage + "." + getSaveProjectName();
+		String gwtModule = basePackage + "." + getClassPrefix();
 		return gwtModule;
+	}
+	
+	private String getClassPrefix() {
+		String artifactId = getSaveProjectName();
+		return StringUtils.capitalize(artifactId);
+	}
+	
+	public String getEntryPointGadget() {
+		return getClassPrefix() + GADGET_SUFIX;
+	}
+	
+	public String getEntryPointGadgetQualified() {
+		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+		return java.getBasePackage() + "." + getEntryPointGadget();
+	}
+	
+	public String getEntryPointStandalone() {
+		return getClassPrefix() + STANDALONE_SUFIX;
+	}
+	
+	public String getEntryPointStandaloneQualified() {
+		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+		return java.getBasePackage() + "." + getEntryPointStandalone();
+	}
+
+	public String getSaveProjectName() {
+		final JavaSourceFacet javaSourceFacet = project
+				.getFacet(JavaSourceFacet.class);
+		String basePackage = javaSourceFacet.getBasePackage();
+		
+		return StringUtils.substring(basePackage,
+				StringUtils.lastIndexOf(basePackage, ".") + 1);
 	}
 
 	private void installDependencies() {
@@ -282,13 +368,7 @@ public class GWTFacet extends BaseFacet {
 	}
 
 	private void createGWTMessages() {
-		ResourceFacet resources = project.getFacet(ResourceFacet.class);
-		VelocityContext velocityContext = new VelocityContext();
-		StringWriter stringWriter = new StringWriter();
-		velocityEngine.mergeTemplate("Messages.vm", "UTF-8", velocityContext,
-				stringWriter);
-		resources.createResource(stringWriter.toString().toCharArray(),
-				getMessagePropertiesPath());
+		createResourceAbsolute("Messages.vm", getMessagePropertiesPath());
 	}
 
 	public String getMessagePropertiesPath() {
@@ -306,11 +386,11 @@ public class GWTFacet extends BaseFacet {
 		try {
 			// prefer the user messages
 			properties.putAll(messages);
-			properties.load(new InputStreamReader(is, "UTF-8"));
+			properties.load(new InputStreamReader(is, UTF_8));
 			is.close();
 			fileOutputStream = new FileOutputStream(
 					resource.getUnderlyingResourceObject());
-			properties.store(new OutputStreamWriter(fileOutputStream, "UTF-8"),
+			properties.store(new OutputStreamWriter(fileOutputStream, UTF_8),
 					null);
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
@@ -328,70 +408,31 @@ public class GWTFacet extends BaseFacet {
 
 	}
 
-	private void createViewXML(String name, String classPrefix) {
-		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
-		ResourceFacet resources = project.getFacet(ResourceFacet.class);
-		VelocityContext velocityContext = new VelocityContext();
-
-		GWTFacet gwtFacet = project.getFacet(GWTFacet.class);
-
-		velocityContext.put("basePackage", java.getBasePackage());
-		velocityContext.put("gwt", gwtFacet);
-		velocityContext.put("java", java);
-		velocityContext.put("util", VELOCITY_UTIL);
-
-		StringWriter stringWriter = new StringWriter();
-		velocityEngine.mergeTemplate("mvp/ViewImpl.ui.xml.vm", "UTF-8",
-				velocityContext, stringWriter);
-		resources.createResource(
-				stringWriter.toString().toCharArray(),
-				java.getBasePackage().replace('.', '/')
-						+ String.format("/%s/%sViewImpl.ui.xml", name,
-								classPrefix));
+	private void createViewXML(String name, String classPrefix) {	
+		createResource("mvp/ViewImpl.ui.xml.vm", String.format("%s/%sViewImpl.ui.xml", name, classPrefix));
 	}
 
 	private void createGWTModule() {
-		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
-		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
-		ResourceFacet resources = project.getFacet(ResourceFacet.class);
-		VelocityContext velocityContext = new VelocityContext();
-
-		String name = java.getBasePackage();
-		velocityContext.put("classPrefix", getClassPrefix(mvnFacet));
-		velocityContext.put("basePackage", java.getBasePackage());
-
-		StringWriter stringWriter = new StringWriter();
-		velocityEngine.mergeTemplate("Module.gwt.xml.vm", "UTF-8",
-				velocityContext, stringWriter);
-		resources.createResource(
-				stringWriter.toString().toCharArray(),
-				name.replace('.', '/')
-						+ String.format("/%s.gwt.xml", getSaveProjectName()));
+		//generate the base module
+		createResource("Module.gwt.xml.vm", String.format("%s.gwt.xml", getSaveProjectName()));
+		
+		//generate standalone gwt module
+		createResourceAbsolute("ModuleStandalone.gwt.xml.vm", getModuleNameStandalone().replace('.', '/') + ".gwt.xml");
 	}
+	
+	
 
-	public String getSaveProjectName() {
-		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
-		String artifactId = mvnFacet.getPOM().getArtifactId();
-		return StringUtils.substring(artifactId,
-				StringUtils.indexOf(artifactId, ".") + 1);
-	}
-
-	private void createJavaSource(String template) {
+	public void createJavaSource(String template) {
 		createJavaSource(template, new HashMap<String, Object>());
 	}
 
 	private JavaResource createJavaSource(String template,
 			Map<String, Object> parameter) {
-		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
 		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
-		VelocityContext velocityContext = new VelocityContext(parameter);
-
-		String classPrefix = getClassPrefix(mvnFacet);
-		velocityContext.put("classPrefix", classPrefix);
-		velocityContext.put("basePackage", java.getBasePackage());
+		VelocityContext velocityContext = createVelocityContext(parameter);
 
 		StringWriter stringWriter = new StringWriter();
-		velocityEngine.mergeTemplate(template, "UTF-8", velocityContext,
+		velocityEngine.mergeTemplate(template, UTF_8, velocityContext,
 				stringWriter);
 
 		JavaType<?> serviceClass = JavaParser.parse(JavaType.class,
@@ -402,19 +443,53 @@ public class GWTFacet extends BaseFacet {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-
 	}
 
-	private String getClassPrefix(final MavenCoreFacet mvnFacet) {
-		String artifactId = getSaveProjectName();
-		return StringUtils.capitalize(artifactId);
+	public VelocityContext createVelocityContext(
+			Map<String, Object> parameter) {
+		if (parameter == null) {
+			parameter = new HashMap<String, Object>();
+		}
+		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+		GWTFacet gwtFacet = project.getFacet(GWTFacet.class);
+		VelocityContext velocityContext = new VelocityContext(parameter);
+
+		String classPrefix = getClassPrefix();
+		velocityContext.put("classPrefix", classPrefix);
+		velocityContext.put("basePackage", java.getBasePackage());
+		velocityContext.put("gwt", gwtFacet);
+		velocityContext.put("java", java);
+		velocityContext.put("util", VELOCITY_UTIL);
+		return velocityContext;
 	}
+	
+	public FileResource<?> createResourceAbsolute(String template, String absoluteResource) {
+		ResourceFacet resources = project.getFacet(ResourceFacet.class);
+		VelocityContext velocityContext = createVelocityContext(null);
+
+		StringWriter stringWriter = new StringWriter();
+		velocityEngine.mergeTemplate(template, UTF_8,
+				velocityContext, stringWriter);
+
+		FileResource<?> createdResource = resources.createResource(
+				stringWriter.toString().toCharArray(),
+				absoluteResource);
+		return createdResource;
+	}
+	
+	public FileResource<?> createResource(String template, String relativeResource) {
+		JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+		String name = java.getBasePackage();
+		String absoluteResource = name.replace('.', '/') + "/" + relativeResource;
+		return createResourceAbsolute(template, absoluteResource);
+	}
+
+
 
 	public JavaResource getEventBus() throws FileNotFoundException {
 		final JavaSourceFacet javaFacet = project
 				.getFacet(JavaSourceFacet.class);
-		final MavenCoreFacet mvnFacet = project.getFacet(MavenCoreFacet.class);
-		String classPrefix = getClassPrefix(mvnFacet);
+		String classPrefix = getClassPrefix();
 		return javaFacet.getJavaResource(javaFacet.getBasePackage() + "."
 				+ classPrefix + "EventBus");
 	}

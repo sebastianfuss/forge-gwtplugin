@@ -1,4 +1,4 @@
-#*
+/**
  * Copyright (C) 2012 Sandro Sonntag sso@adorsys.de
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *#
-package de.adorsys.cssp.gui;
+ */
+package de.adorsys.forge.gwt;
 
-import com.mvp4g.client.Mvp4gModule;
-
-public interface CSSPMainModule extends Mvp4gModule {
+public enum GWTMode {
+	STANDALONE,
+	GADGET
 
 }

@@ -45,7 +45,6 @@ public class GWTPluginTest extends AbstractShellTest {
 		Project p = initializeProject(PackagingType.WAR);
 		queueInputLines("y");
 		getShell().execute("gwt setup");
-		getShell().execute("mvn install");
 	}
 
 	@Test
@@ -53,7 +52,6 @@ public class GWTPluginTest extends AbstractShellTest {
 		Project p = initializeProject(PackagingType.WAR);
 		queueInputLines("y");
 		getShell().execute("gwt setup --no-mvp4g");
-		getShell().execute("mvn install");
 	}
 
 	@Test
@@ -61,7 +59,6 @@ public class GWTPluginTest extends AbstractShellTest {
 		Project p = initializeProject(PackagingType.WAR);
 		queueInputLines("y");
 		getShell().execute("gwt setup --no-bean-validation");
-		getShell().execute("mvn install");
 	}
 
 	@Test
@@ -72,7 +69,6 @@ public class GWTPluginTest extends AbstractShellTest {
 
 		getShell().execute("gwt setup");
 		getShell().execute("gwt new-mvp foobar");
-		getShell().execute("mvn install");
 	}
 
 	@Test
@@ -122,5 +118,28 @@ public class GWTPluginTest extends AbstractShellTest {
 				"new-project --named adorsys.foo --topLevelPackage de.adorsys.foo --type "
 						+ type.toString());
 		return getProject();
+	}
+
+	@Test
+	public void testAddGadget() throws Exception	{
+		Project p = initializeProject(PackagingType.WAR);
+
+		queueInputLines("y");
+
+		getShell().execute("gwt setup");
+		getShell().execute("gwt setup-gadget");
+	
+	}
+
+	@Test
+	public void testSetMode() throws Exception
+	{
+		Project p = initializeProject(PackagingType.WAR);
+
+		queueInputLines("y");
+
+		getShell().execute("gwt setup");
+		getShell().execute("gwt setup-gadget");
+		getShell().execute("gwt set-mode STANDALONE");
 	}
 }

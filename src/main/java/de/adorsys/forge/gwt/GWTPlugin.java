@@ -41,6 +41,9 @@ import org.jboss.forge.parser.java.JavaType;
 import org.jboss.forge.parser.java.Method;
 import org.jboss.forge.parser.java.Parameter;
 import org.jboss.forge.project.Project;
+import org.jboss.forge.project.dependencies.Dependency;
+import org.jboss.forge.project.dependencies.DependencyBuilder;
+import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.project.facets.events.InstallFacets;
@@ -67,8 +70,6 @@ import org.jboss.forge.shell.plugins.SetupCommand;
 @RequiresFacet(GWTFacet.class)
 @Help("A plugin that helps to build gwt interfaces.")
 public class GWTPlugin implements Plugin {
-
-	private static final VelocityUtil VELOCITY_UTIL = new VelocityUtil();
 
 	@Inject
 	private Event<InstallFacets> event;
@@ -102,21 +103,29 @@ public class GWTPlugin implements Plugin {
 	public void setup(
 			@Option(name = "no-bean-validation", flagOnly = true) boolean validation,
 			@Option(name = "no-mvp4g", flagOnly = true) boolean mvp4g,
-			PipeOut out) {
+			PipeOut out) throws FileNotFoundException {
 		if (!project.hasFacet(GWTFacet.class))
 	           event.fire(new InstallFacets(GWTFacet.class));
 	       else
 	           ShellMessages.info(out, "GWT is installed.");
 
-		GWTFacet facet = project.getFacet(GWTFacet.class);
+		GWTFacet gwtFacet = project.getFacet(GWTFacet.class);
 		
 		if(!validation) {
-			facet.setupBeanValidation();
+			gwtFacet.setupBeanValidation();
 		}
 		
 		if(!mvp4g) {
-			facet.setupMVP4G();
+			gwtFacet.setupMVP4G();
 		}
+		
+		ShellMessages.info(out, "Whats next?\n" +
+				"    1. run your generated application and type 'gwt run'\n" +
+				"    2. open this url in your webbrowser: http://127.0.0.1:8888/index.html?gwt.codesvr=127.0.0.1:9997\n" +
+				"    3. extend your application with a new mvp package 'new-mvp contacts'\n" +
+				"    4. define new events in " + gwtFacet.getEventBus().getFullyQualifiedName() + " and wire them with 'wire-events' to the presenters\n" +
+				"    5. define a 'Contact' model class and generate a widget UI with 'generate-view --edit --list --table'\n" +
+				"    6. Publish your app and generate a opensocial gadget with 'setup-gadget'\n");
 	}
 	
 	@Command(value = "setup-beanvalidation", help = "add beanvalidation to the gwt project")
@@ -129,6 +138,75 @@ public class GWTPlugin implements Plugin {
 	public void addMvp4g() {
 		GWTFacet facet = project.getFacet(GWTFacet.class);
 		facet.setupMVP4G();
+	}
+	
+	@Command(value = "setup-gadget", help = "make the project to a opensocial gadget project")
+	public void addGadget(PipeOut out) {
+		GWTFacet gwtFacet = project.getFacet(GWTFacet.class);
+		DependencyFacet dependencyFacet = project.getFacet(DependencyFacet.class);
+		MavenCoreFacet mavenFacet = project.getFacet(MavenCoreFacet.class);
+		final JavaSourceFacet javaFacet = project.getFacet(JavaSourceFacet.class);
+		
+		//add the gadgets repo
+		gwtFacet.addRepository("gwt-gadgets", "http://gwtquery-plugins.googlecode.com/svn/mavenrepo/");
+
+		//add the gadgets dependencies
+		Dependency gwtGadgets = DependencyBuilder
+				.create("com.google.gwt.google-apis:gwt-gadgets:1.2.1:compile:jar").setClassifier("2.3.0");
+		dependencyFacet.addDirectManagedDependency(gwtGadgets);
+		dependencyFacet.addDirectDependency(DependencyBuilder.create(gwtGadgets)
+				.setVersion(null));
+		
+		//generate Gadget
+		gwtFacet.createJavaSource("gadget/Gadget.java.vm");
+		
+		//generate gadget gwt module
+		gwtFacet.createResourceAbsolute("gadget/GadgetModule.gwt.xml.vm", gwtFacet.getModuleNameGagdet().replace('.', '/') + ".gwt.xml");
+		
+		//generate ModulePrefs.txt
+		gwtFacet.createResource("gadget/ModulePrefs.txt.vm", "ModulePrefs.txt");
+		
+		//generate Content.txt
+		gwtFacet.createResource("gadget/Content.txt.vm", "Content.txt");
+
+		//set the gadget entry point
+		gwtFacet.setGWTModule(gwtFacet.getModuleNameGagdet());
+		
+		//print where can the gadget.xml could be found
+		ShellMessages.success(out, "Gadget support is now configured.");
+		try {
+			JavaResource javaResource = javaFacet.getJavaResource(gwtFacet.getModuleNameGagdet());
+			ShellMessages.info(out, "Please edit your gadget metadata in (" + javaResource.getUnderlyingResourceObject().getAbsolutePath() + ")");
+		} catch (FileNotFoundException e) {
+		}
+		String contextRoot = mavenFacet.getFullProjectBuildingResult().getProject().getBuild().getFinalName();
+		
+		ShellMessages.info(out, "Where can I find the gadget XML?" +
+				String.format("\n    * http://localhost:8080/%s/%s/%s.gadget.xml",
+						contextRoot,
+						gwtFacet.getModuleNameGagdet(),
+						gwtFacet.getEntryPointGadget()) +
+				String.format("\n    * %s/target/%s/%s/%s.gadget.xml",
+							project.getProjectRoot().getUnderlyingResourceObject().getAbsolutePath(),
+							contextRoot,
+							gwtFacet.getModuleNameGagdet(),
+							gwtFacet.getEntryPointGadget()));
+		
+		//print how to switch to standalone mode
+		ShellMessages.warn(out, "GWT-Developmentmode does not work with gadgets!\n    run 'gwt set-mode STANDALONE' to switch back to standalone version.");
+	}
+	
+	@Command(value = "set-mode", help = "Switch between gadget and standalone mode. This edits the pom for you!")
+	public void setMode(@Option(help="mode") GWTMode mode, PipeOut out) {
+		GWTFacet gwtFacet = project.getFacet(GWTFacet.class);
+		switch (mode) {
+			case GADGET:
+				gwtFacet.setGWTModule(gwtFacet.getModuleNameGagdet());
+				
+			case STANDALONE:
+				gwtFacet.setGWTModule(gwtFacet.getModuleNameStandalone());
+		}
+		ShellMessages.success(out, "I set the GWT mode to " + mode + " for you.");
 	}
 	
 	@Command(value = "generate-view", help = "generates a view from a bean")
@@ -151,17 +229,17 @@ public class GWTPlugin implements Plugin {
 	private void generateFromModel(boolean list, boolean table, boolean edit,
 			final PipeOut out, JavaResource javaResource) {
 		if (list) {
-			generate(javaResource, "List", "ListModelViewImpl.java.vm", null, out);
+			generateWidget(javaResource, "List", "ListModelViewImpl.java.vm", null, out);
 		}
 		if (table) {
-			generate(javaResource, "Table", "TableModelViewImpl.java.vm", "TableModelViewImpl.ui.xml.vm", out);
+			generateWidget(javaResource, "Table", "TableModelViewImpl.java.vm", "TableModelViewImpl.ui.xml.vm", out);
 		}
 		if (edit) {
-			generate(javaResource, "", "ModelViewImpl.java.vm", "ModelViewImpl.ui.xml.vm", out);
+			generateWidget(javaResource, "", "ModelViewImpl.java.vm", "ModelViewImpl.ui.xml.vm", out);
 		}
 	}
 	
-	private void generate(JavaResource resouce, String sufix, String javaTemplate, String uiTemplate, final PipeOut out) {
+	private void generateWidget(JavaResource resouce, String sufix, String javaTemplate, String uiTemplate, final PipeOut out) {
 		try {
 			JavaSource<?> javaSource = resouce.getJavaSource();
 			if (javaSource instanceof JavaClass) {
@@ -169,11 +247,7 @@ public class GWTPlugin implements Plugin {
 				JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
 				GWTFacet gwtFacet = project.getFacet(GWTFacet.class);
 
-				VelocityContext velocityContext = new VelocityContext();
-				velocityContext.put("javaSource", javaSource);
-				velocityContext.put("gwt", gwtFacet);
-				velocityContext.put("java", java);
-				velocityContext.put("util", VELOCITY_UTIL);
+				VelocityContext velocityContext = gwtFacet.createVelocityContext(null);
 				
 				HashMap<String, String> msgCollector = new HashMap<String, String>();
 				velocityContext.put("msgCollector", msgCollector);
@@ -295,20 +369,16 @@ public class GWTPlugin implements Plugin {
 	
 	@Command("run")
 	public void run(final PipeOut out, String... a){
-		String command = "gwt:run";
-		final ArrayList<String> args = new ArrayList<String>();
-		executeCommand(out, command, args, a);
+		executeCommand(out, "gwt:run", a);
 	}
 	
 	@Command("debug")
 	public void debug(final PipeOut out, String... a){
-		String command = "gwt:debug";
-		final ArrayList<String> args = new ArrayList<String>();
-		executeCommand(out, command, args, a);
+		executeCommand(out, "gwt:debug", a);
 	}
 
-	private void executeCommand(final PipeOut out, String command,
-			final ArrayList<String> args, String... a) {
+	private void executeCommand(final PipeOut out, String command, String... a) {
+		final ArrayList<String> args = new ArrayList<String>();
 		args.add(command);
 		if (a != null) {
 			args.addAll(Arrays.asList(a));

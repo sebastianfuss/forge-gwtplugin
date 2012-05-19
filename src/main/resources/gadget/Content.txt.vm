@@ -1,0 +1,6 @@
+<style>
+
+</style>
+<script>
+const gadgetServer = '${hostname}';
+</script>

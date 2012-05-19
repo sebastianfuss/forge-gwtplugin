@@ -1,0 +1,9 @@
+<OAuth>
+<!--
+      <Service name="test">
+        <Request url="${hostname}/sys.auth.idp/rest/oauth/request_token" method="GET" />
+        <Access url="${hostname}/sys.auth.idp/rest/oauth/access_token" method="GET" />
+        <Authorization url="${hostname}/sys.auth.idp/rest/oauth/confirm_access" />
+      </Service>
+-->
+</OAuth>
