@@ -95,7 +95,6 @@ public class GWTPluginTest extends AbstractShellTest {
 		getShell().execute("gwt wire-events");
 		//dup check
 		getShell().execute("gwt wire-events");
-		getShell().execute("mvn install");
 	}
 
 	@Test

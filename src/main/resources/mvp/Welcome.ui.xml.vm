@@ -1,0 +1,98 @@
+#*
+ * Copyright (C) 2012 Sandro Sonntag sso@adorsys.de
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *#<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:e="urn:import:com.google.gwt.editor.ui.client"
+	xmlns:mod="urn:import:${java.basePackage}.widgets"
+	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui">
+	
+	<ui:with field='msg' type='${gwt.messagesQualified}' />
+	<ui:style>
+		.important {
+			font-weight: bold;
+		}
+		
+		.social li {
+			display: inline !important;
+		}
+	</ui:style>
+
+	<g:HTMLPanel>
+		<b:ResponsiveNavbar position="TOP" scrollspy="true">
+			<b:Brand href="#">GWT-Froge Plugin</b:Brand>
+			<b:NavCollapse>
+				<b:Nav />
+			</b:NavCollapse>
+		</b:ResponsiveNavbar>
+		<div class="container">
+			<div class="hero-unit">
+				<h1>GWT-Forge-Plugin,</h1>
+				<h2>from <a href="http://www.adorsys.de">adorsys</a></h2>
+				<p>...helps you to build good GWT-Apps :)</p>
+				<p>
+					<a class="btn btn-primary btn-large" href="https://github.com/xandrox/forge-gwtplugin">Learn more &raquo;</a>
+				</p>
+			</div>
+			<h1>Whats next?</h1>
+			<hr />
+			
+			<h3>1. Run your generated application</h3>
+			<p>
+				Type in your Forge-Shell <code>gwt run</code> and <a href="http://127.0.0.1:8888/index.html?gwt.codesvr=127.0.0.1:9997">open your webbrowser</a>.
+			</p>
+			<h3>2. Extend your application with a new MVP package</h3>
+			<p>
+				Generate a new packege for your contacts component with <code>new-mvp contacts</code>.
+			</p>
+			
+			<h3>3. Define new events in and wire them to the presenters</h3>
+			<p>
+				Open the Event-Bus (<code>src/main/java/***/***EventBus.java</code>) and define a new event method (myEvent).
+			</p>
+<pre>@Events(startPresenter=ApplicationPresenterImpl.class, ginModules=GwtmvpGinClientModule.class)
+public interface GwtmvpEventBus extends EventBusWithLookup {
+
+    @Start
+    @Event
+    void start();
+
+    <strong>@Event(handlers=ContactsPresenterImpl.class)</strong>
+    <strong>void myEvent();</strong>
+}</pre>
+			<p>
+				Type in your Forge-Shell <code>wire-events</code>. <code>ContactsPresenterImpl.onMyEvent()</code> will be generated...  
+			</p>
+			
+			<h3>4. Define model class and generate a Widget-UI</h3>
+			<p>
+			
+				Type in your Forge-Shel <code>generate-view --edit --list --table</code> and Edit, List and Tablele Widgets are generated in the <code>*.widgets</code> package. 
+			</p>
+			
+			<h3>5. Publish your App and generate a opensocial gadget</h3>
+			<p>
+				Type in your Forge-Shell <code>setup-gadget</code> and a Gadget class will be generated.
+			</p>
+			
+			<h5>~Happy Coding</h5>
+
+			<footer>
+				<hr />
+				<p>GWT-Forge-Plugin by Sandro Sonntag - <a href="http://www.adorsys.de">adorsys GmbH &amp; Co. KG</a></p>
+			</footer>
+		</div>
+	</g:HTMLPanel>
+</ui:UiBinder> 

@@ -112,7 +112,7 @@ public class GWTFacet extends BaseFacet {
 		createJavaSource("EventBus.java.vm");
 		createJavaSource("GinClientModule.java.vm");
 		createJavaSource("ReverseCompositeView.java.vm");
-		createMVP("application");
+		createMVPWelcome();
 	}
 
 	private void createWebResources() {
@@ -131,6 +131,21 @@ public class GWTFacet extends BaseFacet {
 		velocityEngine.mergeTemplate("index.html.vm", UTF_8, context, writer);
 		webResource.createWebResource(writer.toString(), "index.html");
 	}
+	
+	private JavaResource createMVPWelcome() {
+		HashMap<String, Object> contextData = new HashMap<String, Object>();
+		final String name = "application";
+		String nameClassPrefix = StringUtils.capitalize(name);
+
+		contextData.put("nameClassPrefix", nameClassPrefix);
+		contextData.put("name", name);
+
+		JavaResource presenter = createJavaSource("mvp/PresenterImpl.java.vm", contextData);
+		createJavaSource("mvp/View.java.vm", contextData);
+		createJavaSource("mvp/ViewImpl.java.vm", contextData);
+		createResource("mvp/Welcome.ui.xml.vm", String.format("%s/%sViewImpl.ui.xml", name, nameClassPrefix));
+		return presenter;
+	}
 
 	public JavaResource createMVP(String name) {
 		HashMap<String, Object> contextData = new HashMap<String, Object>();
@@ -139,11 +154,10 @@ public class GWTFacet extends BaseFacet {
 		contextData.put("nameClassPrefix", nameClassPrefix);
 		contextData.put("name", name);
 
-		JavaResource presenter = createJavaSource("mvp/PresenterImpl.java.vm",
-				contextData);
+		JavaResource presenter = createJavaSource("mvp/PresenterImpl.java.vm", contextData);
 		createJavaSource("mvp/View.java.vm", contextData);
 		createJavaSource("mvp/ViewImpl.java.vm", contextData);
-		createViewXML(name, nameClassPrefix);
+		createResource("mvp/ViewImpl.ui.xml.vm", String.format("%s/%sViewImpl.ui.xml", name, nameClassPrefix));
 		return presenter;
 	}
 
@@ -193,6 +207,7 @@ public class GWTFacet extends BaseFacet {
 		
 		setGWTModule(gwtModule);
 		addRepository("mvp4g", "http://mvp4g.googlecode.com/svn/maven2/releases");
+		addRepository("gwt-bootstrap", "http://gwtbootstrap.github.com/maven/snapshots");
 	}
 
 	/**
@@ -331,11 +346,14 @@ public class GWTFacet extends BaseFacet {
 		Dependency hibernateValidatorSources = DependencyBuilder.create(
 				"org.hibernate:hibernate-validator:4.2.0.Final:compile:jar")
 				.setClassifier("sources");
-
 		Dependency hibernateValidator = DependencyBuilder
 				.create("org.hibernate:hibernate-validator:4.2.0.Final:compile:jar");
+		
+		Dependency gwtBootstrap = DependencyBuilder
+				.create("com.github.gwtbootstrap:gwt-bootstrap:2.0.3.0-SNAPSHOT:compile:jar");
+		
 		return Arrays.asList(gwtUser, slf4j, slf4jGwt, jaxRs, restyGwt,
-				hibernateValidatorSources, hibernateValidator, mvp4g);
+				hibernateValidatorSources, hibernateValidator, mvp4g, gwtBootstrap);
 	}
 
 	@Override
@@ -406,10 +424,6 @@ public class GWTFacet extends BaseFacet {
 
 		maven.executeMaven(Arrays.asList("generate-resources"));
 
-	}
-
-	private void createViewXML(String name, String classPrefix) {	
-		createResource("mvp/ViewImpl.ui.xml.vm", String.format("%s/%sViewImpl.ui.xml", name, classPrefix));
 	}
 
 	private void createGWTModule() {
