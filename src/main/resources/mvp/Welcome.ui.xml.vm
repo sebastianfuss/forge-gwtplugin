@@ -32,7 +32,7 @@
 
 	<g:HTMLPanel>
 		<b:ResponsiveNavbar position="TOP" scrollspy="true">
-			<b:Brand href="#">GWT-Froge Plugin</b:Brand>
+			<b:Brand href="#">GWT-Forge Plugin</b:Brand>
 			<b:NavCollapse>
 				<b:Nav />
 			</b:NavCollapse>
