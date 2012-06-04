@@ -251,6 +251,7 @@ public class GWTPlugin implements Plugin {
 				
 				HashMap<String, String> msgCollector = new HashMap<String, String>();
 				velocityContext.put("msgCollector", msgCollector);
+				velocityContext.put("javaSource", javaSource);
 				
 				StringWriter stringWriter;
 				if (uiTemplate != null) {
