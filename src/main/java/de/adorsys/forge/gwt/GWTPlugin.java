@@ -60,6 +60,7 @@ import org.jboss.forge.shell.plugins.Option;
 import org.jboss.forge.shell.plugins.PipeOut;
 import org.jboss.forge.shell.plugins.Plugin;
 import org.jboss.forge.shell.plugins.RequiresFacet;
+import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.plugins.SetupCommand;
 
 /**
@@ -69,6 +70,7 @@ import org.jboss.forge.shell.plugins.SetupCommand;
 @Alias("gwt")
 @RequiresFacet(GWTFacet.class)
 @Help("A plugin that helps to build gwt interfaces.")
+@RequiresProject
 public class GWTPlugin implements Plugin {
 
 	@Inject
@@ -211,10 +213,10 @@ public class GWTPlugin implements Plugin {
 	
 	@Command(value = "generate-view", help = "generates a view from a bean")
 	public void generateView(
-			@Option(required = false) JavaResource[] targets,
 			@Option(name="table", description="generates a table widget from the given model type" , flagOnly=true) boolean table,
 			@Option(name="edit", description="generates a edit widget from the given model type" , flagOnly=true) boolean edit,
 			@Option(name="list", description="generates a list widget from the given model type", flagOnly=true) boolean list,
+			@Option(required = false) JavaResource[] targets,
 			final PipeOut out
 			) {
 		if (targets != null) {

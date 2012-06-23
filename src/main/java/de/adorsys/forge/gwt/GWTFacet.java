@@ -169,6 +169,7 @@ public class GWTFacet extends BaseFacet {
 
 		plugin.setArtifactId("gwt-maven-plugin");
 		plugin.setGroupId("org.codehaus.mojo");
+		plugin.setVersion("2.4.0");
 
 		String gwtModule = getModuleNameStandalone();
 		String gwtMessages = getMessagesQualified();
