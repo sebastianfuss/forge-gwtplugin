@@ -429,7 +429,7 @@ public class GWTFacet extends BaseFacet {
 
 	private void createGWTModule() {
 		//generate the base module
-		createResource("Module.gwt.xml.vm", String.format("%s.gwt.xml", getSaveProjectName()));
+		createResource("Module.gwt.xml.vm", String.format("%s.gwt.xml", getClassPrefix()));
 		
 		//generate standalone gwt module
 		createResourceAbsolute("ModuleStandalone.gwt.xml.vm", getModuleNameStandalone().replace('.', '/') + ".gwt.xml");

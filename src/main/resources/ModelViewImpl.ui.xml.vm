@@ -18,6 +18,7 @@
 	xmlns:e="urn:import:com.google.gwt.editor.ui.client"
 	xmlns:date="urn:import:com.google.gwt.user.datepicker.client"
 	xmlns:mod="urn:import:${java.basePackage}.widgets"
+	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
 	>
 	<ui:with field='msg' type='${gwt.messagesQualified}'/>
 	<g:HTMLPanel>

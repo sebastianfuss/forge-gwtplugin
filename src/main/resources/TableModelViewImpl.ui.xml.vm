@@ -17,7 +17,8 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:e="urn:import:com.google.gwt.editor.ui.client"
 	xmlns:date="urn:import:com.google.gwt.user.datepicker.client"
 	xmlns:mod="urn:import:${java.basePackage}.widgets"
-	xmlns:cell="urn:import:com.google.gwt.user.cellview.client">
+	xmlns:cell="urn:import:com.google.gwt.user.cellview.client"
+	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui">
 	<ui:with field='msg' type='${gwt.messagesQualified}' />
 	<g:HTMLPanel>
 		<cell:CellTable ui:field="table"/>
