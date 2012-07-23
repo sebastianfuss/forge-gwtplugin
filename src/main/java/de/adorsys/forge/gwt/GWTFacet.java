@@ -111,7 +111,6 @@ public class GWTFacet extends BaseFacet {
 		createJavaSource("EntryPoint.java.vm");
 		createJavaSource("EventBus.java.vm");
 		createJavaSource("GinClientModule.java.vm");
-		createJavaSource("ReverseCompositeView.java.vm");
 		createMVPWelcome();
 	}
 
@@ -140,10 +139,9 @@ public class GWTFacet extends BaseFacet {
 		contextData.put("nameClassPrefix", nameClassPrefix);
 		contextData.put("name", name);
 
-		JavaResource presenter = createJavaSource("mvp/PresenterImpl.java.vm", contextData);
+		JavaResource presenter = createJavaSource("mvp/Presenter.java.vm", contextData);
 		createJavaSource("mvp/View.java.vm", contextData);
-		createJavaSource("mvp/ViewImpl.java.vm", contextData);
-		createResource("mvp/Welcome.ui.xml.vm", String.format("%s/%sViewImpl.ui.xml", name, nameClassPrefix));
+		createResource("mvp/Welcome.ui.xml.vm", String.format("%s/%sView.ui.xml", name, nameClassPrefix));
 		return presenter;
 	}
 
@@ -154,10 +152,9 @@ public class GWTFacet extends BaseFacet {
 		contextData.put("nameClassPrefix", nameClassPrefix);
 		contextData.put("name", name);
 
-		JavaResource presenter = createJavaSource("mvp/PresenterImpl.java.vm", contextData);
+		JavaResource presenter = createJavaSource("mvp/Presenter.java.vm", contextData);
 		createJavaSource("mvp/View.java.vm", contextData);
-		createJavaSource("mvp/ViewImpl.java.vm", contextData);
-		createResource("mvp/ViewImpl.ui.xml.vm", String.format("%s/%sViewImpl.ui.xml", name, nameClassPrefix));
+		createResource("mvp/View.ui.xml.vm", String.format("%s/%sView.ui.xml", name, nameClassPrefix));
 		return presenter;
 	}
 

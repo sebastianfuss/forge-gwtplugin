@@ -23,9 +23,9 @@ import com.mvp4g.client.annotation.InitHistory;
 import com.mvp4g.client.annotation.Start;
 import com.mvp4g.client.event.EventBusWithLookup;
 
-import ${basePackage}.application.ApplicationPresenterImpl;
+import ${basePackage}.application.ApplicationPresenter;
 
-@Events(startPresenter=ApplicationPresenterImpl.class, ginModules=${classPrefix}GinClientModule.class)
+@Events(startPresenter=ApplicationPresenter.class, ginModules=${classPrefix}GinClientModule.class)
 public interface ${classPrefix}EventBus extends EventBusWithLookup {
 	
 	@Start

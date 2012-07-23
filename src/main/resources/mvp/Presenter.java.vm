@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *#
-package ${basePackage};
+package ${basePackage}.${name};
 
-import com.google.gwt.user.client.ui.Composite;
-import com.mvp4g.client.view.ReverseViewInterface;
+import com.google.gwt.user.client.ui.IsWidget;
+import com.google.inject.Inject;
+import com.mvp4g.client.annotation.Presenter;
+import com.mvp4g.client.presenter.BasePresenter;
 
-public class ReverseCompositeView<P> extends Composite  implements ReverseViewInterface<P> {
+import ${basePackage}.${classPrefix}EventBus;
 
-	private P presenter;
+@Presenter( view = ${nameClassPrefix}View.class )
+public class ${nameClassPrefix}Presenter extends BasePresenter<${nameClassPrefix}View, ${classPrefix}EventBus> {
 	
-	@Override
-	public void setPresenter(P presenter) {
-		this.presenter = presenter;
-	}
-
-	@Override
-	public P getPresenter() {
-		return presenter;
-	}
-
 }

@@ -15,16 +15,27 @@
  *#
 package ${basePackage}.${name};
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.IsWidget;
-import com.mvp4g.client.presenter.PresenterInterface;
-import com.mvp4g.client.view.ReverseViewInterface;
+import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.Widget;
+import com.google.inject.Inject;
 
-import ${basePackage}.${classPrefix}EventBus;
+public class ${nameClassPrefix}View extends Composite {
 
-public interface ${nameClassPrefix}View extends IsWidget, ReverseViewInterface<${nameClassPrefix}View.${nameClassPrefix}Presenter> {
-	
-	public interface ${nameClassPrefix}Presenter extends PresenterInterface<${nameClassPrefix}View, ${classPrefix}EventBus> {
-		
-	}
+    private static RootViewUiBinder uiBinder = GWT.create( RootViewUiBinder.class );
+
+    interface RootViewUiBinder extends UiBinder<Widget, ${nameClassPrefix}View> {
+    }
+    
+   	@Inject
+    private ${nameClassPrefix}Presenter presenter;
+
+    public ${nameClassPrefix}View() {
+        initWidget(uiBinder.createAndBindUi(this));
+    }
 
 }
